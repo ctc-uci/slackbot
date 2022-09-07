@@ -1,13 +1,15 @@
 const { App } = require("@slack/bolt");
 const { Octokit } = require("@octokit/core");
 
+const CreatePRModal = require("./modals/createPR");
+
 require("dotenv").config();
 // Initializes your app with your bot token and signing secret
 const app = new App({
   token: process.env.SLACK_TOKEN,
   signingSecret: process.env.SIGNING_SECRET,
-  //   socketMode: true,
-  //   appToken: process.env.APP_LEVEL_TOKEN,
+  socketMode: true,
+  appToken: process.env.APP_LEVEL_TOKEN,
 });
 
 // Octokit.js
@@ -35,33 +37,53 @@ Please verify that \n\
 2. Your branch name is correct.\n\
 3. Your branch exists on remote (ie git push BEFORE submitting this PR command)`;
 
-app.command("/pr", async ({ command, ack, respond }) => {
+app.command("/pr", async ({ command, ack, client, respond }) => {
   try {
     await ack();
-    const parameters = command.text.split(" ");
-    const response = await octokit.request(
-      `POST /repos/${OWNER}/${REPO}/pulls`,
-      {
-        owner: OWNER,
-        repo: REPO,
-        title: parameters[1],
-        body: PR_TEMPLATE,
-        head: `${OWNER}:${parameters[0]}`,
-        base: "dev",
-      }
-    );
-    await respond(
-      SUCCESS_MESSAGE(parameters[0], response.data.number),
-      (response_type = "ephemeral")
-    );
+    console.log(CreatePRModal);
+    await client.views.open({
+      trigger_id: command.trigger_id,
+      view: CreatePRModal,
+    });
+    // const parameters = command.text.split(" ");
+    // const response = await octokit.request(
+    //   `POST /repos/${OWNER}/${REPO}/pulls`,
+    //   {
+    //     owner: OWNER,
+    //     repo: REPO,
+    //     title: parameters[1],
+    //     body: PR_TEMPLATE,
+    //     head: `${OWNER}:${parameters[0]}`,
+    //     base: "dev",
+    //   }
+    // );
+    // await respond(
+    //   SUCCESS_MESSAGE(parameters[0], response.data.number),
+    //   (response_type = "ephemeral")
+    // );
   } catch (e) {
+    console.log(e);
     await respond(FAILURE_MESSAGE(command), (response_type = "ephemeral"));
   }
+});
+
+app.view("create-pr", async ({ ack, view }) => {
+  await ack();
+  // Sample of how to get a Select's selected value...(scuffed!)
+  // console.log(view.state.values.repository.repository.selected_option.value);
+  //   const response = await octokit.request(`POST /repos/${OWNER}/${REPO}/pulls`, {
+  //     owner: OWNER,
+  //     repo: REPO,
+  //     title: parameters[1],
+  //     body: PR_TEMPLATE,
+  //     head: `${OWNER}:${parameters[0]}`,
+  //     base: "dev",
+  //   });
 });
 
 (async () => {
   const port = 5000;
   // Start your app
-  await app.start(process.env.PORT || port);
+  await app.start();
   console.log(`⚡️ Slack Bolt app is running on port ${port}!`);
 })();
