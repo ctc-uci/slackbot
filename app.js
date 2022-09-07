@@ -1,7 +1,9 @@
 const { App } = require("@slack/bolt");
 const { Octokit } = require("@octokit/core");
+const mongoose = require('mongoose');
 
 const CreatePRModal = require("./modals/createPR");
+const UserModel = require('./models/user.model');
 
 const messages = require('./utils/msgs');
 const prTemplates = require('./utils/prTemplates');
@@ -21,6 +23,16 @@ const octokit = new Octokit({
   auth: process.env.CTC_DEVOPS_PAT,
 });
 
+// Mongoose for connecting to MongoDB
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+const mongoConnection = mongoose.connection;
+mongoConnection.once('open', () => {
+  console.log('MongoDB database connection established successfully');
+});
+
 // const OWNER = "ctc-uci";
 // const REPO = "find-your-anchor-frontend";
 
@@ -28,9 +40,21 @@ app.command("/pr", async ({ command, ack, client, respond }) => {
   try {
     await ack();
     console.log(CreatePRModal);
+    
+    // Getting user info from Mongo
+    const { user_id: slackId } = command;
+    let user;
+    try {
+      user = await UserModel.findOne({ slackId });
+    } catch (err) {
+      console.log(err.message);
+    }
+    console.log('User from MongoDB is', user);
+
     await client.views.open({
       trigger_id: command.trigger_id,
       view: CreatePRModal,
+      // view: () => CreatePRModal(user),
     });
     // const parameters = command.text.split(" ");
     // const response = await octokit.request(
