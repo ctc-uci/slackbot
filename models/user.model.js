@@ -6,6 +6,7 @@ const userSchema = new mongoose.Schema({
   role: { type: String, required: true }, // "ADMIN" | "TECHLEAD" | "MEMBER" - defined in config/perms.js
   projects: { type: Array, required: true }, // List of assigned projects
   rep: { type: Number, required: true }, // Reputation count
+  matchyEnabled: { type: Boolean, required: true }, // Opted into Matchy or not
 });
 
 const User = mongoose.model('User', userSchema);
