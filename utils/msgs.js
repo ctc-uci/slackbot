@@ -3,7 +3,7 @@ const CTC_USER = "ctc-uci";
 const messages = {
   pr: {
     success: (repo, branch, number) =>
-      `SUCCESSFULLY created a PR for \`${branch}\ in ${repo}: https://github.com/${CTC_USER}/${repo}/pull/${number}`,
+      `SUCCESSFULLY created a PR for \`${branch}\` in ${repo}: https://github.com/${CTC_USER}/${repo}/pull/${number}`,
     failure: (command) =>
       `FAILED to make a PR with the command \n\`/pr ${command.text}\`\n\
             Please verify that \n\

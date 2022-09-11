@@ -1,7 +1,38 @@
 const octokit = require("./octokit");
 const prTemplates = require("./prTemplates");
 
+const CreatePRModal = require("../modals/CreatePRModal");
+const UserModel = require("../models/user.model");
+const messages = require("./msgs");
+
 require("dotenv").config("../");
+
+const openPRModal = async ({ command, ack, client, respond }) => {
+  try {
+    await ack();
+
+    // Getting user info from Mongo
+    const { user_id: slackId } = command;
+    let user;
+    try {
+      user = await UserModel.findOne({ slackId });
+      console.log(user);
+    } catch (err) {
+      console.log(err.message);
+    }
+
+    // const test = CreatePRModal(user);
+    // console.log(CreatePRModal());
+    // console.log(test);
+    await client.views.open({
+      trigger_id: command.trigger_id,
+      view: CreatePRModal(user),
+    });
+  } catch (e) {
+    console.log(e);
+    await respond(messages.pr.failure(command), (response_type = "ephemeral"));
+  }
+};
 
 const createRemoteBranchIfNotExists = async (values) => {
   const repository = values.repository.repository.selected_option.value;
@@ -110,8 +141,45 @@ const createPR = async (values) => {
   } catch (e) {}
 };
 
+const handleCreatePRSubmitted = async ({
+  ack,
+  view,
+  body,
+  respond,
+  client,
+}) => {
+  try {
+    const PRWithBranchExists = await existingPRWithBranchExists(
+      view.state.values
+    );
+    if (PRWithBranchExists) {
+      await ack({
+        response_action: "errors",
+        errors: {
+          branch:
+            "A PR already exists with that branch. Please close the existing PR or overwrite it with git push",
+        },
+      });
+    } else {
+      await ack();
+    }
+    // If the branch doesn't exist in the remote repository
+    // 1. Make the new branch
+    // 2. Make an empty commit on the new branch
+    await createRemoteBranchIfNotExists(view.state.values);
+    // Create the PR
+    const values = await createPR(view.state.values);
+    client.chat.postMessage({
+      text: messages.pr.success(values.repo, values.branch, values.number),
+      channel: body.user.id,
+    });
+    // TODO: NOTIFY THE USER ON ERROR
+  } catch (e) {
+    console.log(e);
+  }
+};
+
 module.exports = {
-  createRemoteBranchIfNotExists,
-  existingPRWithBranchExists,
-  createPR,
+  openPRModal,
+  handleCreatePRSubmitted,
 };

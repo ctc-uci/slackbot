@@ -1,15 +1,12 @@
 const { App } = require("@slack/bolt");
 const mongoose = require("mongoose");
 
-const CreatePRModal = require("./modals/createPR");
-const UserModel = require("./models/user.model");
+const { openPRModal, handleCreatePRSubmitted } = require("./utils/pr");
 
 const {
-  createRemoteBranchIfNotExists,
-  existingPRWithBranchExists,
-  createPR,
-} = require("./utils/pr");
-const messages = require("./utils/msgs");
+  openUpdateProfileModal,
+  handleUpdateProfileSubmitted,
+} = require("./utils/profile");
 
 require("dotenv").config();
 // Initializes your app with your bot token and signing secret
@@ -33,60 +30,11 @@ mongoConnection.once("open", () => {
 // const OWNER = "ctc-uci";
 // const REPO = "find-your-anchor-frontend";
 
-app.command("/pr", async ({ command, ack, client, respond }) => {
-  try {
-    await ack();
+app.command("/pr", openPRModal);
+app.command("/profile", openUpdateProfileModal);
 
-    // Getting user info from Mongo
-    const { user_id: slackId } = command;
-    let user;
-    try {
-      user = await UserModel.findOne({ slackId });
-    } catch (err) {
-      console.log(err.message);
-    }
-
-    await client.views.open({
-      trigger_id: command.trigger_id,
-      view: CreatePRModal(),
-    });
-  } catch (e) {
-    console.log(e);
-    await respond(messages.pr.failure(command), (response_type = "ephemeral"));
-  }
-});
-
-app.view("create-pr", async ({ ack, view, body, respond, client }) => {
-  try {
-    const PRWithBranchExists = await existingPRWithBranchExists(
-      view.state.values
-    );
-    if (PRWithBranchExists) {
-      await ack({
-        response_action: "errors",
-        errors: {
-          branch:
-            "A PR already exists with that branch. Please close the existing PR or overwrite it with git push",
-        },
-      });
-    } else {
-      await ack();
-    }
-    // If the branch doesn't exist in the remote repository
-    // 1. Make the new branch
-    // 2. Make an empty commit on the new branch
-    await createRemoteBranchIfNotExists(view.state.values);
-    // Create the PR
-    const values = await createPR(view.state.values);
-    client.chat.postMessage({
-      text: messages.pr.success(values.repo, values.branch, values.number),
-      channel: body.user.id,
-    });
-    // TODO: NOTIFY THE USER ON ERROR
-  } catch (e) {
-    console.log(e);
-  }
-});
+app.view("create-pr", handleCreatePRSubmitted);
+app.view("update-profile", handleUpdateProfileSubmitted);
 
 (async () => {
   const port = 5000;
