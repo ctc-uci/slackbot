@@ -63,7 +63,7 @@ const handleUpdateProfileSubmitted = async ({
           slackName,
           repos: selectedRepos,
           matchyEnabled,
-        },
+        }
       );
       // TODO Send a message indicating profile was updated successfully
     }

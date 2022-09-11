@@ -34,6 +34,7 @@ const UpdateProfileModal = (user) => {
             emoji: true,
           },
           options: repoOptions,
+          ...(initialOptions.length > 0 && { initial_options: initialOptions }),
           action_id: "repositories",
         },
         label: plainText("Select your repositories..."),
@@ -54,28 +55,23 @@ const UpdateProfileModal = (user) => {
                 value: "matchy",
               },
             ],
+            ...(user.matchyEnabled && {
+              initial_options: [
+                {
+                  text: plainText("Sign me up for Matchy!"),
+                  description: plainText(
+                    "Matchy is an opt-in program for getting to know and meeting up with a new CTC member every week!"
+                  ),
+                  value: "matchy",
+                },
+              ],
+            }),
             action_id: "matchy", // TODO Figure out why error triangle shows up after clicking this field
           },
         ],
       },
     ],
   };
-
-  if (initialOptions.length > 0) {
-    view.blocks[0].element.initial_options = initialOptions;
-  }
-
-  if (user.matchyEnabled) {
-    view.blocks[1].elements[0].initial_options = [
-      {
-        text: plainText("Sign me up for Matchy!"),
-        description: plainText(
-          "Matchy is an opt-in program for getting to know and meeting up with a new CTC member every week!"
-        ),
-        value: "matchy",
-      },
-    ];
-  }
 
   return JSON.stringify(view);
 };
