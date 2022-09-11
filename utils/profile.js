@@ -13,12 +13,10 @@ const openUpdateProfileModal = async ({ command, ack, client, respond }) => {
     let user;
     try {
       user = await UserModel.findOne({ slackId });
-      console.log(user);
+      // console.log(user);
     } catch (err) {
       console.log(err.message);
     }
-
-    console.log(user);
 
     await client.views.open({
       trigger_id: command.trigger_id,
@@ -39,8 +37,7 @@ const handleUpdateProfileSubmitted = async ({
 }) => {
   try {
     await ack();
-    console.log(body);
-    const { id: slackId, name: slackName } = body;
+    const { id: slackId, name: slackName } = body.user;
     const v = view.state.values;
     const selectedRepos = v.repositories.repositories.selected_options.map(
       (repo) => repo.value
@@ -58,7 +55,7 @@ const handleUpdateProfileSubmitted = async ({
         rep: 0,
         matchyEnabled,
       });
-      // Send a message indicating profile was created
+      // TODO Send a message indicating profile was created
     } else {
       await UserModel.findOneAndUpdate(
         { slackId },
@@ -67,11 +64,12 @@ const handleUpdateProfileSubmitted = async ({
           repos: selectedRepos,
           matchyEnabled,
         },
-        { new: true }
       );
-      // Send a message indicating profile was updated successfully
+      // TODO Send a message indicating profile was updated successfully
     }
-  } catch (e) {}
+  } catch (e) {
+    console.log(e);
+  }
 };
 
 module.exports = {

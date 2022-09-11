@@ -66,7 +66,7 @@ const CreatePRModal = (user) => {
     : {
         type: "modal",
         title: plainText("Create New PR"),
-        close: plainText("Ask your tech lead"),
+        close: plainText("Let's try /profile"),
         blocks: [image("https://i.imgur.com/492aYiU.png")],
       };
 

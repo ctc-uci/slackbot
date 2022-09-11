@@ -9,6 +9,8 @@ const UpdateProfileModal = (user) => {
     value: `${repos[repo].alias}`,
   }));
 
+  console.log(initialOptions);
+
   const repoOptions = Object.values(repos).map((repo) => ({
     text: plainText(`${repo.name} (${repo.owner}/${repo.alias})`),
     value: `${repo.alias}`,
@@ -31,11 +33,11 @@ const UpdateProfileModal = (user) => {
             text: "Select one or more repositories...",
             emoji: true,
           },
-          initial_options: initialOptions,
           options: repoOptions,
           action_id: "repositories",
         },
         label: plainText("Select your repositories..."),
+        optional: true,
       },
       {
         type: "actions",
@@ -52,19 +54,23 @@ const UpdateProfileModal = (user) => {
                 value: "matchy",
               },
             ],
-            action_id: "matchy",
+            action_id: "matchy", // TODO Figure out why error triangle shows up after clicking this field
           },
         ],
       },
     ],
   };
 
+  if (initialOptions.length > 0) {
+    view.blocks[0].element.initial_options = initialOptions;
+  }
+
   if (user.matchyEnabled) {
     view.blocks[1].elements[0].initial_options = [
       {
         text: plainText("Sign me up for Matchy!"),
         description: plainText(
-          "Matchy is an opt-in program where you'll be able to meet and hang out with a new CTC member every week!"
+          "Matchy is an opt-in program for getting to know and meeting up with a new CTC member every week!"
         ),
         value: "matchy",
       },
