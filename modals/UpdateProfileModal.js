@@ -6,12 +6,12 @@ const UpdateProfileModal = (user) => {
     text: plainText(
       `${repos[repo].name} (${repos[repo].owner}/${repos[repo].alias})`
     ),
-    value: `${repos[repo].owner}/${repos[repo].alias}`,
+    value: `${repos[repo].alias}`,
   }));
 
   const repoOptions = Object.values(repos).map((repo) => ({
     text: plainText(`${repo.name} (${repo.owner}/${repo.alias})`),
-    value: `${repo.owner}/${repo.alias}`,
+    value: `${repo.alias}`,
   }));
 
   const view = {
@@ -35,7 +35,7 @@ const UpdateProfileModal = (user) => {
           options: repoOptions,
           action_id: "repositories",
         },
-        label: plainText("Select repositories..."),
+        label: plainText("Select your repositories..."),
       },
       {
         type: "actions",

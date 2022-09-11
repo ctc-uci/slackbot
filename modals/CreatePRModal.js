@@ -4,8 +4,15 @@ const { image, plainText } = require("../utils/blockUtils");
 const repos = require("../config/repos");
 
 const CreatePRModal = (user) => {
-  return user.repos.length
-    ? JSON.stringify({
+  const repoOptions = Object.values(repos)
+    .filter((repo) => user.repos.includes(repo.alias))
+    .map((repo) => ({
+      text: plainText(`${repo.name} (${repo.alias})`),
+      value: `${repo.alias}`,
+    }));
+
+  const view = user.repos.length
+    ? {
         type: "modal",
         title: plainText("Create new PR"),
         close: plainText("Close"),
@@ -18,12 +25,7 @@ const CreatePRModal = (user) => {
             element: {
               placeholder: plainText("Type a repo name..."),
               action_id: "repository",
-              options: Object.values(repos)
-                .filter((repo) => user.repos.includes(repo.alias))
-                .map((repo) => ({
-                  text: plainText(`${repo.name} (${repo.alias})`),
-                  value: `${repo.alias}`,
-                })),
+              options: repoOptions,
               type: "static_select",
             },
             hint: plainText(
@@ -60,13 +62,15 @@ const CreatePRModal = (user) => {
             type: "input",
           },
         ],
-      })
-    : JSON.stringify({
+      }
+    : {
         type: "modal",
         title: plainText("Create New PR"),
         close: plainText("Ask your tech lead"),
         blocks: [image("https://i.imgur.com/492aYiU.png")],
-      });
+      };
+
+  return JSON.stringify(view);
 };
 
 module.exports = CreatePRModal;

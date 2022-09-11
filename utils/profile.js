@@ -1,6 +1,8 @@
 const UpdateProfileModal = require("../modals/UpdateProfileModal");
+const User = require("../models/user.model");
 
 const UserModel = require("../models/user.model");
+const perms = require("../utils/perms");
 
 const openUpdateProfileModal = async ({ command, ack, client, respond }) => {
   try {
@@ -37,7 +39,38 @@ const handleUpdateProfileSubmitted = async ({
 }) => {
   try {
     await ack();
-    console.log(view.state.values);
+    console.log(body);
+    const { id: slackId, name: slackName } = body;
+    const v = view.state.values;
+    const selectedRepos = v.repositories.repositories.selected_options.map(
+      (repo) => repo.value
+    );
+    const matchyEnabled = v.matchy.matchy.selected_options.length
+      ? true
+      : false;
+    user = await UserModel.findOne({ slackId });
+    if (!user) {
+      await UserModel.create({
+        slackId,
+        slackName,
+        role: perms.MEMBER,
+        repos: selectedRepos,
+        rep: 0,
+        matchyEnabled,
+      });
+      // Send a message indicating profile was created
+    } else {
+      await UserModel.findOneAndUpdate(
+        { slackId },
+        {
+          slackName,
+          repos: selectedRepos,
+          matchyEnabled,
+        },
+        { new: true }
+      );
+      // Send a message indicating profile was updated successfully
+    }
   } catch (e) {}
 };
 
