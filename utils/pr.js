@@ -7,6 +7,8 @@ const messages = require("./msgs");
 
 require("dotenv").config("../");
 
+const owner = 'ctc-uci';
+
 const openPRModal = async ({ command, ack, client, respond }) => {
   try {
     await ack();
@@ -16,31 +18,28 @@ const openPRModal = async ({ command, ack, client, respond }) => {
     let user;
     try {
       user = await UserModel.findOne({ slackId });
-      console.log(user);
     } catch (err) {
       console.log(err.message);
     }
 
-    // const test = CreatePRModal(user);
-    // console.log(CreatePRModal());
-    // console.log(test);
     await client.views.open({
       trigger_id: command.trigger_id,
       view: CreatePRModal(user),
     });
   } catch (e) {
-    console.log(e);
-    await respond(messages.pr.failure(command), (response_type = "ephemeral"));
+    client.chat.postMessage({
+      text: messages.pr.modalFailure(e),
+      channel: body.user.id,
+    });
   }
 };
 
 const createRemoteBranchIfNotExists = async (values) => {
-  const repository = values.repository.repository.selected_option.value;
-  const [owner, repo] = repository.split("/");
+  const repo = values.repository.repository.selected_option.value;
   const branch = values.branch.branch.value;
   try {
     // If the branch doesn't exist, then create the branch
-    await octokit.request(`GET /repos/${repository}/branches/${branch}`, {
+    await octokit.request(`GET /repos/{owner}/{repo}/branches/${branch}`, {
       owner,
       repo,
       branch,
@@ -85,7 +84,7 @@ const createRemoteBranchIfNotExists = async (values) => {
         await octokit.request("POST /repos/{owner}/{repo}/git/commits", {
           owner,
           repo,
-          message: `Creat a PR for branch ${branch}`,
+          message: `Create a PR for branch ${branch}`,
           tree: treeSHA,
           parents: [latestDevCommitSHA],
         })
@@ -104,8 +103,7 @@ const createRemoteBranchIfNotExists = async (values) => {
 };
 
 const existingPRWithBranchExists = async (values) => {
-  const repository = values.repository.repository.selected_option.value;
-  const [owner, repo] = repository.split("/");
+  const repo = values.repository.repository.selected_option.value;
   const branch = values.branch.branch.value;
   const response = await octokit.request("GET /repos/{owner}/{repo}/pulls", {
     owner,
@@ -119,33 +117,28 @@ const existingPRWithBranchExists = async (values) => {
 };
 
 const createPR = async (values) => {
-  const repository = values.repository.repository.selected_option.value;
-  const [owner, repo] = repository.split("/");
+  const repo = values.repository.repository.selected_option.value;
   const branch = values.branch.branch.value;
   const title = values.pr_title.pr_title.value;
-  try {
-    const response = await octokit.request(`POST /repos/${repository}/pulls`, {
-      owner,
-      repo,
-      title,
-      body: prTemplates.common,
-      head: `${owner}:${branch}`,
-      base: "dev",
-    });
-    return {
-      repo,
-      branch,
-      number: response.data.number,
-    };
-    // TODO: RETURN AN ERROR WITH APPROPRIATE FIELDS
-  } catch (e) {}
+  const response = await octokit.request(`POST /repos/{owner}/{repo}/pulls`, {
+    owner,
+    repo,
+    title,
+    body: prTemplates.common,
+    head: `${owner}:${branch}`,
+    base: "dev",
+  });
+  return {
+    repo,
+    branch,
+    number: response.data.number,
+  };
 };
 
 const handleCreatePRSubmitted = async ({
   ack,
   view,
   body,
-  respond,
   client,
 }) => {
   try {
@@ -173,9 +166,11 @@ const handleCreatePRSubmitted = async ({
       text: messages.pr.success(values.repo, values.branch, values.number),
       channel: body.user.id,
     });
-    // TODO: NOTIFY THE USER ON ERROR
   } catch (e) {
-    console.log(e);
+    client.chat.postMessage({
+      text: messages.pr.failure(e),
+      channel: body.user.id,
+    });
   }
 };
 

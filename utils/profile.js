@@ -3,8 +3,9 @@ const User = require("../models/user.model");
 
 const UserModel = require("../models/user.model");
 const perms = require("../utils/perms");
+const messages = require("../utils/msgs");
 
-const openUpdateProfileModal = async ({ command, ack, client, respond }) => {
+const openUpdateProfileModal = async ({ command, ack, client }) => {
   try {
     await ack();
 
@@ -13,7 +14,6 @@ const openUpdateProfileModal = async ({ command, ack, client, respond }) => {
     let user;
     try {
       user = await UserModel.findOne({ slackId });
-      // console.log(user);
     } catch (err) {
       console.log(err.message);
     }
@@ -23,8 +23,10 @@ const openUpdateProfileModal = async ({ command, ack, client, respond }) => {
       view: UpdateProfileModal(user),
     });
   } catch (e) {
-    console.log(e);
-    // await respond(messages.pr.failure(command), (response_type = "ephemeral"));
+    client.chat.postMessage({
+      text: messages.profile.modalFailure(e),
+      channel: body.user.id,
+    });
   }
 };
 
@@ -32,7 +34,6 @@ const handleUpdateProfileSubmitted = async ({
   ack,
   view,
   body,
-  respond,
   client,
 }) => {
   try {
@@ -55,7 +56,6 @@ const handleUpdateProfileSubmitted = async ({
         rep: 0,
         matchyEnabled,
       });
-      // TODO Send a message indicating profile was created
     } else {
       await UserModel.findOneAndUpdate(
         { slackId },
@@ -65,10 +65,16 @@ const handleUpdateProfileSubmitted = async ({
           matchyEnabled,
         }
       );
-      // TODO Send a message indicating profile was updated successfully
+      client.chat.postMessage({
+        text: messages.profile.success,
+        channel: body.user.id,
+      });
     }
   } catch (e) {
-    console.log(e);
+    client.chat.postMessage({
+      text: messages.profile.failure(e),
+      channel: body.user.id,
+    });
   }
 };
 
