@@ -10,10 +10,21 @@ const openUpdateProfileModal = async ({ command, ack, client }) => {
     await ack();
 
     // // Getting user info from Mongo
-    const { user_id: slackId } = command;
+    const { user_id: slackId, user_name: slackName } = command;
     let user;
     try {
       user = await UserModel.findOne({ slackId });
+      if (!user) {
+        await UserModel.create({
+          slackId,
+          slackName,
+          role: perms.MEMBER,
+          repos: [],
+          rep: 0,
+          matchyEnabled: false,
+        });
+        user = await UserModel.findOne({ slackId });
+      };
     } catch (err) {
       console.log(err.message);
     }
@@ -25,7 +36,7 @@ const openUpdateProfileModal = async ({ command, ack, client }) => {
   } catch (e) {
     client.chat.postMessage({
       text: messages.profile.modalFailure(e),
-      channel: body.user.id,
+      channel: slackId,
     });
   }
 };
@@ -46,7 +57,7 @@ const handleUpdateProfileSubmitted = async ({
     const matchyEnabled = v.matchy.matchy.selected_options.length
       ? true
       : false;
-    user = await UserModel.findOne({ slackId });
+    const user = await UserModel.findOne({ slackId });
     if (!user) {
       await UserModel.create({
         slackId,

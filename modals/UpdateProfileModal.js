@@ -9,8 +9,6 @@ const UpdateProfileModal = (user) => {
     value: `${repos[repo].alias}`,
   }));
 
-  console.log(initialOptions);
-
   const repoOptions = Object.values(repos).map((repo) => ({
     text: plainText(`${repo.name} (${repo.owner}/${repo.alias})`),
     value: `${repo.alias}`,

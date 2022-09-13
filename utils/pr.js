@@ -10,11 +10,9 @@ require("dotenv").config("../");
 const owner = 'ctc-uci';
 
 const openPRModal = async ({ command, ack, client, respond }) => {
+  await ack();
+  const { user_id: slackId } = command;
   try {
-    await ack();
-
-    // Getting user info from Mongo
-    const { user_id: slackId } = command;
     let user;
     try {
       user = await UserModel.findOne({ slackId });
@@ -28,8 +26,8 @@ const openPRModal = async ({ command, ack, client, respond }) => {
     });
   } catch (e) {
     client.chat.postMessage({
-      text: messages.pr.modalFailure(e),
-      channel: body.user.id,
+      text: messages.pr.modal(e),
+      channel: slackId,
     });
   }
 };
