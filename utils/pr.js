@@ -9,7 +9,7 @@ require("dotenv").config("../");
 
 const owner = 'ctc-uci';
 
-const openPRModal = async ({ command, ack, client, respond }) => {
+const openCreatePRModal = async ({ command, ack, client, body }) => {
   await ack();
   const { user_id: slackId } = command;
   try {
@@ -22,15 +22,34 @@ const openPRModal = async ({ command, ack, client, respond }) => {
 
     await client.views.open({
       trigger_id: command.trigger_id,
-      view: CreatePRModal(user),
+      view: await CreatePRModal(user),
     });
   } catch (e) {
+    console.log(e);
     client.chat.postMessage({
       text: messages.pr.modal(e),
       channel: slackId,
     });
   }
 };
+
+const updateIssueOptions = async ({ client, ack, body }) => {
+  await ack();
+  let user;
+  try {
+    user = await UserModel.findOne({ slackId: body.user.id });
+  } catch (err) {
+    console.log(err.message);
+  }
+
+  const repo = body.view.state.values.repository.repository.selected_option.value;
+
+  await client.views.update({
+    view_id: body.view.id,
+    trigger_id: body.trigger_id,
+    view: await CreatePRModal(user, repo),
+  })
+}
 
 const createRemoteBranchIfNotExists = async (values) => {
   const repo = values.repository.repository.selected_option.value;
@@ -82,7 +101,7 @@ const createRemoteBranchIfNotExists = async (values) => {
         await octokit.request("POST /repos/{owner}/{repo}/git/commits", {
           owner,
           repo,
-          message: `Create a PR for branch ${branch}`,
+          message: messages.pr.emptyCommit(branch),
           tree: treeSHA,
           parents: [latestDevCommitSHA],
         })
@@ -118,11 +137,12 @@ const createPR = async (values) => {
   const repo = values.repository.repository.selected_option.value;
   const branch = values.branch.branch.value;
   const title = values.pr_title.pr_title.value;
+  const issue = values[`${repo}/issue`].issue.selected_option.value;
   const response = await octokit.request(`POST /repos/{owner}/{repo}/pulls`, {
     owner,
     repo,
     title,
-    body: prTemplates.common,
+    body: prTemplates.common(issue),
     head: `${owner}:${branch}`,
     base: "dev",
   });
@@ -140,17 +160,23 @@ const handleCreatePRSubmitted = async ({
   client,
 }) => {
   try {
+    const ackErrors = { response_action: "errors", errors: {} };
+    // Make sure that there isn't an existing PR from the desired branch
     const PRWithBranchExists = await existingPRWithBranchExists(
       view.state.values
     );
     if (PRWithBranchExists) {
-      await ack({
-        response_action: "errors",
-        errors: {
-          branch:
-            "A PR already exists with that branch. Please close the existing PR or overwrite it with git push",
-        },
-      });
+      ackErrors.errors.branch = messages.pr.branchExists;
+    }
+    // Make sure the selected issue isn't -1 (default option)
+    const repository = view.state.values.repository.repository.selected_option.value;
+    const issue = view.state.values[`${repository}/issue`].issue.selected_option.value;
+    if (issue === '-1') {
+      ackErrors.errors[`${repository}/issue`] = messages.pr.invalidIssue;
+    }
+    // If there are any errors, inform the user
+    if (PRWithBranchExists || issue == '-1') {
+      await ack(ackErrors);
     } else {
       await ack();
     }
@@ -173,6 +199,7 @@ const handleCreatePRSubmitted = async ({
 };
 
 module.exports = {
-  openPRModal,
+  openCreatePRModal,
+  updateIssueOptions,
   handleCreatePRSubmitted,
 };

@@ -1,7 +1,7 @@
 const { App } = require("@slack/bolt");
 const mongoose = require("mongoose");
 
-const { openPRModal, handleCreatePRSubmitted } = require("./utils/pr");
+const { openCreatePRModal, handleCreatePRSubmitted, updateIssueOptions } = require("./utils/pr");
 
 const {
   openUpdateProfileModal,
@@ -30,8 +30,9 @@ mongoConnection.once("open", () => {
 // const OWNER = "ctc-uci";
 // const REPO = "find-your-anchor-frontend";
 
-app.command("/pr", openPRModal);
+app.command("/pr", openCreatePRModal);
 app.command("/profile", openUpdateProfileModal);
+app.action("repository", updateIssueOptions);
 
 app.view("create-pr", handleCreatePRSubmitted);
 app.view("update-profile", handleUpdateProfileSubmitted);

@@ -4,9 +4,12 @@ const messages = {
   pr: {
     success: (repo, branch, number) =>
       `SUCCESSFULLY created a PR for \`${branch}\` in ${repo}: https://github.com/${CTC_USER}/${repo}/pull/${number}`,
-    failure: (command, error) =>
-      `FAILED to make a PR with the command \n\`/pr ${command.text}\`\nError:${error}`,
-    modal: (error) => `Failed to open modal to create PR with error: ${error}`
+    failure: (error) =>
+      `FAILED to make a PR with error: ${error}`,
+    modal: (error) => `Failed to open modal to create PR with error: ${error}`,
+    branchExists: "A PR already exists with that branch. Please close the existing PR or overwrite it with git push",
+    invalidIssue: "Please select a valid issue.",
+    emptyCommit: (branch) => `Create a PR for branch ${branch}`
   },
   profile: {
     success: "Successfully updated your profile!",
