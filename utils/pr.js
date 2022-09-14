@@ -191,10 +191,13 @@ const handleCreatePRSubmitted = async ({
       channel: body.user.id,
     });
   } catch (e) {
-    client.chat.postMessage({
-      text: messages.pr.failure(e),
-      channel: body.user.id,
-    });
+    // When ack responds with errors, e is undefined
+    if (e !== undefined) {
+      client.chat.postMessage({
+        text: messages.pr.failure(e),
+        channel: body.user.id,
+      });
+    }
   }
 };
 
