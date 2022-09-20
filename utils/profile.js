@@ -5,11 +5,12 @@ const UserModel = require("../models/user.model");
 const perms = require("../utils/perms");
 const messages = require("../utils/msgs");
 
+// Gets the current user from MongoDB (creates it if doesn't exist) and opens a PR to update user profile
 const openUpdateProfileModal = async ({ command, ack, client }) => {
   try {
     await ack();
 
-    // // Getting user info from Mongo
+    // Getting user info from Mongo
     const { user_id: slackId, user_name: slackName } = command;
     let user;
     try {
@@ -41,6 +42,7 @@ const openUpdateProfileModal = async ({ command, ack, client }) => {
   }
 };
 
+// Updates user info with selected repositories, Matchy opt in, etc.
 const handleUpdateProfileSubmitted = async ({
   ack,
   view,

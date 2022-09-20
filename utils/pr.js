@@ -9,7 +9,9 @@ require("dotenv").config("../");
 
 const owner = 'ctc-uci';
 
-const openCreatePRModal = async ({ command, ack, client, body }) => {
+// Gets the current user from MongoDB and opens a modal to create a PR with
+// Used when the user submits the PR command
+const openCreatePRModal = async ({ command, ack, client }) => {
   await ack();
   const { user_id: slackId } = command;
   try {
@@ -33,6 +35,7 @@ const openCreatePRModal = async ({ command, ack, client, body }) => {
   }
 };
 
+// A helper function to update the issues dropdown in the CreatePRModal whenever a different repository is selected
 const updateIssueOptions = async ({ client, ack, body }) => {
   await ack();
   let user;
@@ -51,6 +54,8 @@ const updateIssueOptions = async ({ client, ack, body }) => {
   })
 }
 
+// A helper function to create a remote branch (reference) if the submitted PR branch doesn't exist on remote
+// The function creates an empty commit because Github doesn't let you create a PR for a branch with no extra commits
 const createRemoteBranchIfNotExists = async (values) => {
   const repo = values.repository.repository.selected_option.value;
   const branch = values.branch.branch.value;
@@ -119,6 +124,7 @@ const createRemoteBranchIfNotExists = async (values) => {
   }
 };
 
+// Helper function that returns a boolean indicating whether a PR for the submitted branch exists
 const existingPRWithBranchExists = async (values) => {
   const repo = values.repository.repository.selected_option.value;
   const branch = values.branch.branch.value;
@@ -133,6 +139,8 @@ const existingPRWithBranchExists = async (values) => {
   );
 };
 
+// Helper function to creates the PR from the submitted branch with the submitted title
+// Called after user input is validated on the CreatePRModal form
 const createPR = async (values) => {
   const repo = values.repository.repository.selected_option.value;
   const branch = values.branch.branch.value;
@@ -153,6 +161,8 @@ const createPR = async (values) => {
   };
 };
 
+// Function called to validate user input and create a PR with submitted values
+// Called when the user submits the CreatePRModal form
 const handleCreatePRSubmitted = async ({
   ack,
   view,
