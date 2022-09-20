@@ -16,6 +16,7 @@
     "@slack/bolt": "^3.12.1",
     "dotenv": "^16.0.2",
     "mongoose": "^6.5.4",
+    "node-schedule": "^2.1.0",
     "nodemon": "^2.0.19",
     "prettier": "^2.7.1",
     "slack-block-builder": "^2.6.0"

@@ -15,6 +15,14 @@ const messages = {
     success: "Successfully updated your profile!",
     failure: (error) => `Failed to update your profile with error: ${error}`,
     modalFailure: (error) => `Failed to open modal to update profile with error: ${error}`,
+  },
+  matchy: {
+    intro: (users) => {
+      const names = '<@' + users.join('>, <@') + '>';
+      return `Hey ${names}!\n\
+You have been matched this week :hatching_chick:\n\
+Go ahead and figure out when you're both free to meet up for a virtual meeting :smile:`
+    }
   }
 };
 

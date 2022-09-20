@@ -1,5 +1,7 @@
-const { App } = require("@slack/bolt");
+const schedule = require('node-schedule');
 const mongoose = require("mongoose");
+
+const Bot = require('./utils/bot');
 
 const { openCreatePRModal, handleCreatePRSubmitted, updateIssueOptions } = require("./utils/pr");
 
@@ -8,14 +10,7 @@ const {
   handleUpdateProfileSubmitted,
 } = require("./utils/profile");
 
-require("dotenv").config();
-// Initializes your app with your bot token and signing secret
-const app = new App({
-  token: process.env.SLACK_TOKEN,
-  signingSecret: process.env.SIGNING_SECRET,
-  socketMode: true,
-  appToken: process.env.APP_LEVEL_TOKEN,
-});
+const { generateMatchyMeetups, clearMatchy } = require("./utils/matchy");
 
 // Mongoose for connecting to MongoDB
 mongoose.connect(process.env.MONGO_URI, {
@@ -30,16 +25,18 @@ mongoConnection.once("open", () => {
 // const OWNER = "ctc-uci";
 // const REPO = "find-your-anchor-frontend";
 
-app.command("/pr", openCreatePRModal);
-app.command("/profile", openUpdateProfileModal);
-app.action("repository", updateIssueOptions);
+Bot.command("/pr", openCreatePRModal);
+Bot.command("/profile", openUpdateProfileModal);
+Bot.command("/matchy", generateMatchyMeetups);
+Bot.command("/clear", clearMatchy);
+Bot.action("repository", updateIssueOptions);
 
-app.view("create-pr", handleCreatePRSubmitted);
-app.view("update-profile", handleUpdateProfileSubmitted);
+Bot.view("create-pr", handleCreatePRSubmitted);
+Bot.view("update-profile", handleUpdateProfileSubmitted);
 
 (async () => {
   const port = 5000;
   // Start your app
-  await app.start();
+  await Bot.start();
   console.log(`⚡️ Slack Bolt app is running on port ${port}!`);
 })();
