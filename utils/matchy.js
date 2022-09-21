@@ -1,6 +1,7 @@
 const Bot = require('./bot');
 
 const ConfigModel = require('../models/config.model');
+const UserModel = require('../models/user.model');
 const messages = require("./msgs");
 
 // const MATCHY_CHANNEL_ID = 'C01FL4VCE1Z';
@@ -94,12 +95,22 @@ const shuffle = (array) => {
   return newArray;
 }
 
-// Get members list and shuffle
+// Function to get all members in a matchy meetup channel
+// Deprecated for 2022
 const getMembersInMatchyChannel = async (channel) => {
   const users = await Bot.client.conversations.members({ channel, });
   return users.members.filter(user => !BLACKLISTED.includes(user));
 }
 
+// Function to get all members signed up for Matchy according to MongoDB
+const getMembersFromMongoDB = async () => {
+  const members = await UserModel.find({});
+  return members
+    .filter(member => member.matchyEnabled)
+    .map(member => member.slackId);
+}
+
+// Gets a dictionary of all previous matches
 const getPreviousMatches = async () => {
   let config;
   try {
@@ -225,7 +236,8 @@ const generateMatchyMeetups = async () => {
   const previousMatches = await getPreviousMatches();
 
   // Get all members in #matchy
-  const members = await getMembersInMatchyChannel(MATCHY_CHANNEL_ID);
+  // const members = await getMembersInMatchyChannel(MATCHY_CHANNEL_ID);
+  const members = await getMembersFromMongoDB();
 
   // Sort the members by # of previous partners in ascending order
   // Prioritizes people who've met less people so they can meet everyone
