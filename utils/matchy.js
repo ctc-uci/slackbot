@@ -184,7 +184,6 @@ const getMatches = async (members, previousMatches) => {
       partnered.add(partner);
     }
   })
-
   if (extraMember) {
     const index = Math.floor(Math.random() * currentMatches.length);
     currentMatches[index].push(extraMember);
@@ -204,17 +203,29 @@ const processMatch = async (match, previousMatches) => {
 }
 
 // Processes the current matches and updates previous matches
-const updatePreviousMatches = async (currentMatches, previousMatches) => {
+const updateCurrentAndPreviousMatches = async (currentMatches, previousMatches) => {
   for (const match of currentMatches) {
     await processMatch(match, previousMatches);
   }
+
+  // Store the new currentMatches object into MongoDB
   // Store the new previousMatches object into MongoDB
-  await ConfigModel.findOneAndUpdate(
-    { key: 'previousMatches' },
-    {
-      value: previousMatches
-    }
-  );
+  const requests = [
+    ConfigModel.findOneAndUpdate(
+      { key: 'currentMatches' },
+      {
+        value: currentMatches,
+      }
+    ),
+    ConfigModel.findOneAndUpdate(
+      { key: 'previousMatches' },
+      {
+        value: previousMatches
+      }
+    )
+  ]
+
+  await Promise.all(requests);
 }
 
 // Creates group chats for all matches and sends intro messages
@@ -231,30 +242,34 @@ const createGroupChats = async (currentMatches) => {
 
 // Generates matchy meetups
 // This is ran once a week every Thursday
-const generateMatchyMeetups = async () => {
+const generateMatchyMeetups = async ({ ack }) => {
+  await ack();
   // Get all previous matches
   const previousMatches = await getPreviousMatches();
 
   // Get all members in #matchy
+  // const members = MEMBERS_TEST_LIST;
   // const members = await getMembersInMatchyChannel(MATCHY_CHANNEL_ID);
   const members = await getMembersFromMongoDB();
 
-  // Sort the members by # of previous partners in ascending order
-  // Prioritizes people who've met less people so they can meet everyone
-  members.sort((a, b) => {
-    const first = a in previousMatches ? previousMatches[a].length : 0;
-    const second = b in previousMatches ? previousMatches[b].length : 0;
-    return first < second ? -1 : (first > second ? 1 : 0);
-  })
+  if (members.length > 1) {
+    // Sort the members by # of previous partners in ascending order
+    // Prioritizes people who've met less people so they can meet everyone
+    members.sort((a, b) => {
+      const first = a in previousMatches ? previousMatches[a].length : 0;
+      const second = b in previousMatches ? previousMatches[b].length : 0;
+      return first < second ? -1 : (first > second ? 1 : 0);
+    })
 
-  // Generate matches for this week
-  const currentMatches = await getMatches(members, previousMatches);
+    // Generate matches for this week
+    const currentMatches = await getMatches(members, previousMatches);
 
-  // Update the previous matches in MongoDB
-  await updatePreviousMatches(currentMatches, previousMatches);
+    // Update the previous matches in MongoDB
+    await updateCurrentAndPreviousMatches(currentMatches, previousMatches);
 
-  // Create group chats and send intro message
-  await createGroupChats(currentMatches);
+    // Create group chats and send intro message
+    await createGroupChats(currentMatches);
+  }
 }
 
 module.exports = {
