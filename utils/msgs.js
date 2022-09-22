@@ -20,8 +20,8 @@ const messages = {
     intro: (users) => {
       const names = '<@' + users.join('>, <@') + '>';
       return `Hey ${names}!\n\
-You have been matched this week :hatching_chick:\n\
-Go ahead and figure out when you're both free to meet up for a virtual meeting :smile:`
+You have been matched this week :worry-frog-cheer:\n\
+Go ahead and figure out when you're all free to meet up for an in-person or virtual meeting :smile:`
     }
   }
 };
