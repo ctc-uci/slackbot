@@ -35,7 +35,7 @@ const openUpdateProfileModal = async ({ command, ack, client }) => {
       view: UpdateProfileModal(user),
     });
   } catch (e) {
-    client.chat.postMessage({
+    client.chat.postEphemeral({
       text: messages.profile.modalFailure(e),
       channel: slackId,
     });
@@ -78,13 +78,14 @@ const handleUpdateProfileSubmitted = async ({
           matchyEnabled,
         }
       );
-      client.chat.postMessage({
+      client.chat.postEphemeral({
         text: messages.profile.success,
         channel: body.user.id,
+        user: body.user.id
       });
     }
   } catch (e) {
-    client.chat.postMessage({
+    client.chat.postEphemeral({
       text: messages.profile.failure(e),
       channel: body.user.id,
     });

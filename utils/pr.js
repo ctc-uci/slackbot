@@ -27,8 +27,7 @@ const openCreatePRModal = async ({ command, ack, client }) => {
       view: await CreatePRModal(user),
     });
   } catch (e) {
-    console.log(e);
-    client.chat.postMessage({
+    client.chat.postEphemeral({
       text: messages.pr.modal(e),
       channel: slackId,
     });
@@ -203,7 +202,7 @@ const handleCreatePRSubmitted = async ({
   } catch (e) {
     // When ack responds with errors, e is undefined
     if (e !== undefined) {
-      client.chat.postMessage({
+      client.chat.postEphemeral({
         text: messages.pr.failure(e),
         channel: body.user.id,
       });
