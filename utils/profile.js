@@ -21,6 +21,7 @@ const openUpdateProfileModal = async ({ command, ack, client }) => {
           slackName,
           role: perms.MEMBER,
           repos: [],
+          github: '',
           rep: 0,
           matchyEnabled: false,
         });
@@ -45,6 +46,8 @@ const openUpdateProfileModal = async ({ command, ack, client }) => {
 // Updates user info with selected repositories, Matchy opt in, etc.
 const handleUpdateProfileSubmitted = async ({
   ack,
+  command,
+  respond,
   view,
   body,
   client,
@@ -59,6 +62,7 @@ const handleUpdateProfileSubmitted = async ({
     const matchyEnabled = v.matchy.matchy.selected_options.length
       ? true
       : false;
+    const github = v.github.github.value;
     const user = await UserModel.findOne({ slackId });
     if (!user) {
       await UserModel.create({
@@ -67,6 +71,7 @@ const handleUpdateProfileSubmitted = async ({
         role: perms.MEMBER,
         repos: selectedRepos,
         rep: 0,
+        github,
         matchyEnabled,
       });
     } else {
@@ -74,6 +79,7 @@ const handleUpdateProfileSubmitted = async ({
         { slackId },
         {
           slackName,
+          github,
           repos: selectedRepos,
           matchyEnabled,
         }

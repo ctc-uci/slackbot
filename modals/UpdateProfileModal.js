@@ -2,6 +2,7 @@ const repos = require("../config/repos");
 const { plainText } = require("../utils/blockUtils");
 
 const UpdateProfileModal = (user) => {
+  const github = user.github;
   const initialOptions = user?.repos?.map((repo) => ({
     text: plainText(
       `${repos[repo].name} (${repos[repo].owner}/${repos[repo].alias})`
@@ -21,6 +22,18 @@ const UpdateProfileModal = (user) => {
     close: plainText("Cancel"),
     callback_id: "update-profile",
     blocks: [
+      {
+        type: "input",
+        label: plainText("Enter your Github username..."),
+        block_id: "github",
+        element: {
+          placeholder: plainText("Enter Github username..."),
+          action_id: "github",
+          type: "plain_text_input",
+          initial_value: github,
+        },
+        dispatch_action: true,
+      },
       {
         type: "input",
         block_id: "repositories",
