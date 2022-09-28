@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
   slackName: { type: String, required: true }, // Slack user name; do we want to keep track of this
   role: { type: String, required: true }, // "ADMIN" | "TECHLEAD" | "MEMBER" - defined in config/perms.js
   repos: { type: Array, required: true }, // List of assigned projects
-  github: { type: String, required: true },
+  github: { type: String, required: () => typeof this.github === 'string', },
   rep: { type: Number, required: true }, // Reputation count
   matchyEnabled: { type: Boolean, required: true }, // Opted into Matchy or not
 });
