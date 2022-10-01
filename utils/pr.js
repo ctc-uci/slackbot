@@ -144,19 +144,35 @@ const createPR = async (values) => {
   const repo = values.repository.repository.selected_option.value;
   const branch = values.branch.branch.value;
   const title = values.pr_title.pr_title.value;
-  const issue = values[`${repo}/issue`].issue.selected_option.value;
-  const response = await octokit.request(`POST /repos/{owner}/{repo}/pulls`, {
+  const issueNumber = values[`${repo}/issue`].issue.selected_option.value;
+  const issueInfo = await octokit.request('GET /repos/{owner}/{repo}/issues/{issue_number}', {
+    owner,
+    repo,
+    issue_number: issueNumber,
+  })
+  const assignees = issueInfo.data.assignees.map(assignee => assignee.login);
+  const pr = await octokit.request(`POST /repos/{owner}/{repo}/pulls`, {
     owner,
     repo,
     title,
-    body: prTemplates.common(issue),
+    body: prTemplates.common(issueNumber),
     head: `${owner}:${branch}`,
     base: "dev",
   });
+  const prNumber = pr.data.number;
+  // Set PR properties equal to original issue properties
+  await octokit.request('PATCH /repos/{owner}/{repo}/issues/{issue_number}', {
+    owner,
+    repo,
+    issue_number: prNumber,
+    assignees,
+    milestone: issueInfo.data.milestone,
+    labels: issueInfo.data.labels,
+  })
   return {
     repo,
     branch,
-    number: response.data.number,
+    prNumber,
   };
 };
 
@@ -196,7 +212,7 @@ const handleCreatePRSubmitted = async ({
     // Create the PR
     const values = await createPR(view.state.values);
     client.chat.postMessage({
-      text: messages.pr.success(values.repo, values.branch, values.number),
+      text: messages.pr.success(values.repo, values.branch, values.prNumber),
       channel: body.user.id,
     });
   } catch (e) {
@@ -205,6 +221,7 @@ const handleCreatePRSubmitted = async ({
       client.chat.postEphemeral({
         text: messages.pr.failure(e),
         channel: body.user.id,
+        user: body.user.id,
       });
     }
   }
