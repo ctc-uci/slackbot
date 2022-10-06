@@ -94,6 +94,7 @@ const handleUpdateProfileSubmitted = async ({
     client.chat.postEphemeral({
       text: messages.profile.failure(e),
       channel: body.user.id,
+      user: body.user.id,
     });
   }
 };
