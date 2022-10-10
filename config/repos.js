@@ -6,7 +6,7 @@ const repos = {
     name: "CTC Website",
     owner: CTC_USER,
     alias: "commit-the-change-website",
-    permissions: [perms.ADMIN],
+    permissions: [perms.ADMIN, perms.TECHLEAD, perms.MEMBER],
   },
   "abound-food-care-backend": {
     name: "AFC Backend",
@@ -36,13 +36,13 @@ const repos = {
     name: "FYA Backend",
     owner: CTC_USER,
     alias: "find-your-anchor-backend",
-    permissions: [perms.ADMIN, perms.TECHLEAD],
+    permissions: [perms.ADMIN],
   },
   "find-your-anchor-frontend": {
     name: "FYA Frontend",
     owner: CTC_USER,
     alias: "find-your-anchor-frontend",
-    permissions: [perms.ADMIN, perms.TECHLEAD],
+    permissions: [perms.ADMIN],
   },
   "get-inspired-backend": {
     name: "GSP Backend",
@@ -60,13 +60,13 @@ const repos = {
     name: "OCH Backend",
     owner: CTC_USER,
     alias: "oc-habitats-backend",
-    permissions: [perms.ADMIN, perms.TECHLEAD],
+    permissions: [perms.ADMIN],
   },
   "oc-habitats-backend": {
     name: "OCH Frontend",
     owner: CTC_USER,
     alias: "oc-habitats-frontend",
-    permissions: [perms.ADMIN, perms.TECHLEAD],
+    permissions: [perms.ADMIN],
   },
   "patriots-and-paws-frontend": {
     name: "PNP Backend",
@@ -84,13 +84,13 @@ const repos = {
     name: "TLP Backend",
     owner: CTC_USER,
     alias: "the-literacy-project-backend",
-    permissions: [perms.ADMIN, perms.TECHLEAD],
+    permissions: [perms.ADMIN],
   },
   "the-literacy-project-backend": {
     name: "TLP Frontend",
     owner: CTC_USER,
     alias: "the-literacy-project-frontend",
-    permissions: [perms.ADMIN, perms.TECHLEAD],
+    permissions: [perms.ADMIN],
   },
 };
 
