@@ -10,10 +10,12 @@ const UpdateProfileModal = (user) => {
     value: `${repos[repo].alias}`,
   }));
 
-  const repoOptions = Object.values(repos).map((repo) => ({
-    text: plainText(`${repo.name} (${repo.owner}/${repo.alias})`),
-    value: `${repo.alias}`,
-  }));
+  const repoOptions = Object.values(repos)
+    .filter(({permissions}) => permissions.includes(user?.role))
+    .map((repo) => ({
+      text: plainText(`${repo.name} (${repo.owner}/${repo.alias})`),
+      value: `${repo.alias}`,
+    }));
 
   const view = {
     type: "modal",
