@@ -182,7 +182,7 @@ const createPR = async (values) => {
     title,
     body: prTemplates.common(issueNumber),
     head: `${owner}:${branch}`,
-    base: "dev",
+    base: "2022-dev-bootcamp-task",
   });
   const prNumber = pr.data.number;
   // Set PR properties equal to original issue properties

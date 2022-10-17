@@ -22,9 +22,6 @@ mongoConnection.once("open", () => {
   console.log("MongoDB database connection established successfully");
 });
 
-// const OWNER = "ctc-uci";
-// const REPO = "find-your-anchor-frontend";
-
 Bot.command("/pr", openCreatePRModal);
 Bot.command("/profile", openUpdateProfileModal);
 Bot.command("/matchy", generateMatchyMeetups);

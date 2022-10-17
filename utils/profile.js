@@ -4,6 +4,7 @@ const User = require("../models/user.model");
 const UserModel = require("../models/user.model");
 const perms = require("../utils/perms");
 const messages = require("../utils/msgs");
+const octokit = require('./octokit');
 
 // Gets the current user from MongoDB (creates it if doesn't exist) and opens a PR to update user profile
 const openUpdateProfileModal = async ({ command, ack, client }) => {
@@ -64,6 +65,18 @@ const handleUpdateProfileSubmitted = async ({
       ? true
       : false;
     const github = v.github.github.value;
+    try {
+      const githubUser = await octokit.request('GET /users/{username}', {
+        username: github,
+      });
+      await octokit.request('POST /orgs/{org}/invitations', {
+        org: 'ctc-uci',
+        role: 'direct_member',
+        invitee_id: githubUser.data.id,
+      });
+    } catch (err) {
+      console.log(err);
+    }
     const user = await UserModel.findOne({ slackId });
     if (!user) {
       await UserModel.create({
