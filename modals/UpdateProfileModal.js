@@ -10,9 +10,6 @@ const UpdateProfileModal = (user) => {
     value: `${repos[repo].alias}`,
   }));
 
-  console.log(Object.values(repos).filter((repo) => repo.permissions?.includes(user.role)));
-  console.log(initialOptions);
-
   const repoOptions = Object.values(repos)
     .filter((repo) => repo.permissions?.includes(user.role) || initialOptions.map((i) => i.value).includes(repo.alias))
     .map((repo) => ({

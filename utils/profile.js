@@ -18,7 +18,7 @@ const openUpdateProfileModal = async ({ command, ack, client }) => {
       if (!user) {
         await UserModel.create({
           slackId,
-          slackName,
+          // slackName,
           role: perms.MEMBER,
           repos: [],
           github: '',
@@ -39,6 +39,7 @@ const openUpdateProfileModal = async ({ command, ack, client }) => {
     client.chat.postEphemeral({
       text: messages.profile.modalFailure(e),
       channel: command.user_id,
+      user: command.user_id,
     });
   }
 };
@@ -67,7 +68,7 @@ const handleUpdateProfileSubmitted = async ({
     if (!user) {
       await UserModel.create({
         slackId,
-        slackName,
+        // slackName,
         role: perms.MEMBER,
         repos: selectedRepos,
         rep: 0,
@@ -78,7 +79,7 @@ const handleUpdateProfileSubmitted = async ({
       await UserModel.findOneAndUpdate(
         { slackId },
         {
-          slackName,
+          // slackName,
           github,
           repos: selectedRepos,
           matchyEnabled,

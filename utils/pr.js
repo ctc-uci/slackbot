@@ -4,6 +4,7 @@ const prTemplates = require("./prTemplates");
 const CreatePRModal = require("../modals/CreatePRModal");
 const UserModel = require("../models/user.model");
 const messages = require("./msgs");
+const perms = require('./perms')
 
 require("dotenv").config("../");
 
@@ -18,6 +19,17 @@ const openCreatePRModal = async ({ command, ack, client }) => {
     let user;
     try {
       user = await UserModel.findOne({ slackId });
+      if (!user) {
+        await UserModel.create({
+          slackId,
+          role: perms.MEMBER,
+          repos: [],
+          github: '',
+          rep: 0,
+          matchyEnabled: false,
+        });
+        user = await UserModel.findOne({ slackId });
+      };
     } catch (err) {
       console.log(err.message);
     }
@@ -30,6 +42,7 @@ const openCreatePRModal = async ({ command, ack, client }) => {
     client.chat.postEphemeral({
       text: messages.pr.modal(e),
       channel: slackId,
+      user: slackId,
     });
   }
 };
@@ -40,6 +53,18 @@ const updateIssueOptions = async ({ client, ack, body }) => {
   let user;
   try {
     user = await UserModel.findOne({ slackId: body.user.id });
+    if (!user) {
+      await UserModel.create({
+        slackId,
+        // slackName,
+        role: perms.MEMBER,
+        repos: [],
+        github: '',
+        rep: 0,
+        matchyEnabled: false,
+      });
+      user = await UserModel.findOne({ slackId });
+    };
   } catch (err) {
     console.log(err.message);
   }
