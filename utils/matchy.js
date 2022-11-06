@@ -65,13 +65,23 @@ const getUserInfo = async (user) => {
 
 // Helper function used to clear Matchy
 // TODO: REMOVE WHEN DONE WITH DEV OR MAKE THIS ADMIN ONLY
-const clearMatchy = async () => {
-  await ConfigModel.findOneAndUpdate(
-    { key: 'previousMatches' },
-    {
-      value: {}
-    }
-  );
+const clearMatchy = async ({ ack }) => {
+  await ack();
+  const requests = [
+    ConfigModel.findOneAndUpdate(
+      { key: 'previousMatches' },
+      {
+        value: {}
+      }
+    ),
+    ConfigModel.findOneAndUpdate(
+      { key: 'currentMatches' },
+      {
+        value: []
+      }
+    )
+  ]
+  await Promise.all(requests);
 }
 
 // Fisher-Yates shuffle
