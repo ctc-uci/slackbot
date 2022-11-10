@@ -1,15 +1,22 @@
 const CTC_USER = "ctc-uci";
 
 const messages = {
+  issue: {
+    success: (title, repo, number) =>
+      `SUCCESSFULLY created issue "${title}" ${repo}: https://github.com/${CTC_USER}/${repo}/issues/${number}`,
+    failure: (error) =>
+      `FAILED to make an issue with error: ${error}`,
+    modal: (error) => `Failed to open modal to create issue with error: ${error}`,
+  },
   pr: {
     success: (repo, branch, number) =>
-      `SUCCESSFULLY created a PR for \`${branch}\` in ${repo}: https://github.com/${CTC_USER}/${repo}/pull/${number}`,
+      `SUCCESSFULLY created a pull request for \`${branch}\` in ${repo}: https://github.com/${CTC_USER}/${repo}/pull/${number}`,
     failure: (error) =>
-      `FAILED to make a PR with error: ${error}`,
-    modal: (error) => `Failed to open modal to create PR with error: ${error}`,
-    branchExists: "A PR already exists with that branch. Please close the existing PR or overwrite it with git push",
+      `FAILED to make a pull request with error: ${error}`,
+    modal: (error) => `Failed to open modal to create pull request with error: ${error}`,
+    branchExists: "A pull request already exists with that branch. Please close the existing pull request or overwrite it with git push",
     invalidIssue: "Please select a valid issue.",
-    emptyCommit: (branch) => `Create a PR for branch ${branch}`
+    emptyCommit: (branch) => `Create a pull trequest for branch ${branch}`
   },
   profile: {
     success: "Successfully updated your profile!",

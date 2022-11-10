@@ -59,39 +59,45 @@ const repos = {
   "oc-habitats-frontend": {
     name: "OCH Backend",
     owner: CTC_USER,
-    alias: "oc-habitats-backend",
+    alias: "oc-habitats-frontend",
     permissions: [perms.ADMIN],
   },
   "oc-habitats-backend": {
     name: "OCH Frontend",
     owner: CTC_USER,
-    alias: "oc-habitats-frontend",
+    alias: "oc-habitats-backend",
     permissions: [perms.ADMIN],
   },
   "patriots-and-paws-frontend": {
     name: "PNP Backend",
     owner: CTC_USER,
-    alias: "patriots-and-paws-backend",
+    alias: "patriots-and-paws-frontend",
     permissions: [perms.ADMIN, perms.TECHLEAD, perms.MEMBER],
   },
   "patriots-and-paws-backend": {
     name: "PNP Frontend",
     owner: CTC_USER,
-    alias: "patriots-and-paws-frontend",
+    alias: "patriots-and-paws-backend",
     permissions: [perms.ADMIN, perms.TECHLEAD, perms.MEMBER],
   },
   "the-literacy-project-frontend": {
     name: "TLP Backend",
     owner: CTC_USER,
-    alias: "the-literacy-project-backend",
+    alias: "the-literacy-project-frontend",
     permissions: [perms.ADMIN],
   },
   "the-literacy-project-backend": {
     name: "TLP Frontend",
     owner: CTC_USER,
-    alias: "the-literacy-project-frontend",
+    alias: "the-literacy-project-backend",
     permissions: [perms.ADMIN],
   },
+  "slackbot-playground": {
+    name: "Slackbot Playground",
+    owner: CTC_USER,
+    alias: "slackbot-playground",
+    permissions: [perms.ADMIN, perms.TECHLEAD],
+  }
 };
 
 module.exports = repos;

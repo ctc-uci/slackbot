@@ -24,7 +24,7 @@ const CreatePRModal = async (user, repo = null) => {
   const view = user.repos.length
     ? {
       type: "modal",
-      title: plainText("Create new PR"),
+      title: plainText("Create New Pull Request"),
       close: plainText("Close"),
       submit: plainText("Create"),
       callback_id: "create-pr",

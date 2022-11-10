@@ -1,5 +1,5 @@
 const octokit = require("./octokit");
-const prTemplates = require("./prTemplates");
+const { prTemplates } = require("./templates");
 
 const CreatePRModal = require("../modals/CreatePRModal");
 const UserModel = require("../models/user.model");
@@ -95,7 +95,7 @@ const createRemoteBranchIfNotExists = async (values) => {
       // Github doesn't let us create a new PR for a branch without any extra commits
       // Therefore, we have to make an empty commit to the new branch so Github doesn't cry like a little b
 
-      const baseRef = `heads/${altHeads[repo] || 'dev'}`;
+      const baseRef = "heads/dev";
       const newRef = `heads/${branch}`;
       // Get the latest commit in dev to set as the base for the new branch
       const latestDevCommitSHA = (
@@ -183,7 +183,7 @@ const createPR = async (values) => {
     title,
     body: prTemplates.common(issueNumber),
     head: `${owner}:${branch}`,
-    base: "2022-dev-bootcamp-task",
+    base: "dev",
   });
   const prNumber = pr.data.number;
   // Set PR properties equal to original issue properties
