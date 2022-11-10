@@ -24,7 +24,7 @@ mongoConnection.once("open", () => {
 
 Bot.command("/pr", openCreatePRModal);
 Bot.command("/profile", openUpdateProfileModal);
-// Bot.command("/matchy", generateMatchyMeetups);
+Bot.command("/matchy", generateMatchyMeetups);
 // Bot.command("/clear", clearMatchy);
 Bot.action("repository", updateIssueOptions);
 
