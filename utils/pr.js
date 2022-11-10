@@ -95,9 +95,6 @@ const createRemoteBranchIfNotExists = async (values) => {
       // Github doesn't let us create a new PR for a branch without any extra commits
       // Therefore, we have to make an empty commit to the new branch so Github doesn't cry like a little b
 
-      // Temporary alt heads: Dev Bootcamp #1 PRs for CTC website
-      const altHeads = {'commit-the-change-website': '2022-dev-bootcamp-task'};
-
       const baseRef = `heads/${altHeads[repo] || 'dev'}`;
       const newRef = `heads/${branch}`;
       // Get the latest commit in dev to set as the base for the new branch
