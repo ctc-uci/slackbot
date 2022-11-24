@@ -45,8 +45,7 @@ Bot.view("update-profile", handleUpdateProfileSubmitted);
   rule.dayOfWeek = 3;
   rule.hour = 17;
   rule.minute = 0;
-  rule.tz = "America/Los_Angeles";
   schedule.scheduleJob(rule, async () => {
-    await generateMatchyMeetups();
+    await generateMatchyMeetups()
   })
 })();
