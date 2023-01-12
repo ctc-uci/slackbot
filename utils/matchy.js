@@ -252,8 +252,7 @@ const createGroupChats = async (currentMatches) => {
 
 // Generates matchy meetups
 // This is ran once a week every Thursday
-const generateMatchyMeetups = async ({ ack }) => {
-  await ack();
+const generateMatchyMeetups = async () => {
   // Get all previous matches
   const previousMatches = await getPreviousMatches();
 
