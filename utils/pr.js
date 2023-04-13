@@ -70,12 +70,15 @@ const updateIssueOptions = async ({ client, ack, body }) => {
   }
 
   const repo = body.view.state.values.repository.repository.selected_option.value;
-
-  await client.views.update({
-    view_id: body.view.id,
-    trigger_id: body.trigger_id,
-    view: await CreatePRModal(user, repo),
-  })
+  try {
+    await client.views.update({
+      view_id: body.view.id,
+      trigger_id: body.trigger_id,
+      view: await CreatePRModal(user, repo),
+    })
+  } catch (e) {
+    console.log(e);
+  }
 }
 
 // A helper function to create a remote branch (reference) if the submitted PR branch doesn't exist on remote

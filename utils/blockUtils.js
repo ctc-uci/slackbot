@@ -4,8 +4,8 @@ const blockUtils = {
     image_url,
     alt_text: alt ?? "",
   }),
-  plainText: (text) => ({ type: "plain_text", text }),
-  markdownText: (text) => ({ type: "mrkdwn", text }),
+  plainText: (text) => ({ type: "plain_text", text: text.substring(0, 75) }),
+  markdownText: (text) => ({ type: "mrkdwn", text: textsubstring(0, 75) }),
 };
 
 module.exports = blockUtils;

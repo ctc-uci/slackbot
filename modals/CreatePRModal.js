@@ -1,8 +1,9 @@
-// const { Modal, Blocks, Elements, Bits } = require("slack-block-builder");
 const { image, plainText } = require("../utils/blockUtils");
 const octokit = require("../utils/octokit");
 
 const repos = require("../config/repos");
+
+const BASE_ISSUES = [{ text: plainText("No issues found in repository"), value: "-1" }]
 
 const CreatePRModal = async (user, repo = null) => {
   const repoOptions = Object.values(repos)
@@ -12,13 +13,14 @@ const CreatePRModal = async (user, repo = null) => {
       value: `${repo.alias}`,
     }));
 
-  let issueOptions = [{ text: plainText("No issues found in repository"), value: "-1" }];
+  let issueOptions = BASE_ISSUES;
   if (repo !== null) {
     issueOptions = (await octokit.request("GET /repos/{owner}/{repo}/issues", {
       owner: 'ctc-uci',
       repo,
     })).data.filter(issue => issue.pull_request === undefined && issue.state === "open")
       .map(issue => ({ text: plainText(`Issue #${issue.number}: ${issue.title}`), value: `${issue.number}` }));
+    if (!issueOptions.length) issueOptions = BASE_ISSUES;
   }
 
   const view = user.repos.length
