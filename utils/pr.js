@@ -4,11 +4,11 @@ const { prTemplates } = require("./templates");
 const CreatePRModal = require("../modals/CreatePRModal");
 const UserModel = require("../models/user.model");
 const messages = require("./msgs");
-const perms = require('./perms')
+const perms = require("./perms");
 
 require("dotenv").config("../");
 
-const owner = 'ctc-uci';
+const owner = "ctc-uci";
 
 // Gets the current user from MongoDB and opens a modal to create a PR with
 // Used when the user submits the PR command
@@ -24,12 +24,12 @@ const openCreatePRModal = async ({ command, ack, client }) => {
           slackId,
           role: perms.MEMBER,
           repos: [],
-          github: '',
+          github: "",
           rep: 0,
           matchyEnabled: false,
         });
         user = await UserModel.findOne({ slackId });
-      };
+      }
     } catch (err) {
       console.log(err.message);
     }
@@ -59,27 +59,28 @@ const updateIssueOptions = async ({ client, ack, body }) => {
         // slackName,
         role: perms.MEMBER,
         repos: [],
-        github: '',
+        github: "",
         rep: 0,
         matchyEnabled: false,
       });
       user = await UserModel.findOne({ slackId });
-    };
+    }
   } catch (err) {
     console.log(err.message);
   }
 
-  const repo = body.view.state.values.repository.repository.selected_option.value;
+  const repo =
+    body.view.state.values.repository.repository.selected_option.value;
   try {
     await client.views.update({
       view_id: body.view.id,
       trigger_id: body.trigger_id,
       view: await CreatePRModal(user, repo),
-    })
+    });
   } catch (e) {
     console.log(e);
   }
-}
+};
 
 // A helper function to create a remote branch (reference) if the submitted PR branch doesn't exist on remote
 // The function creates an empty commit because Github doesn't let you create a PR for a branch with no extra commits
@@ -174,12 +175,15 @@ const createPR = async (values) => {
   const branch = values.branch.branch.value;
   const title = values.pr_title.pr_title.value;
   const issueNumber = values[`${repo}/issue`].issue.selected_option.value;
-  const issueInfo = await octokit.request('GET /repos/{owner}/{repo}/issues/{issue_number}', {
-    owner,
-    repo,
-    issue_number: issueNumber,
-  })
-  const assignees = issueInfo.data.assignees.map(assignee => assignee.login);
+  const issueInfo = await octokit.request(
+    "GET /repos/{owner}/{repo}/issues/{issue_number}",
+    {
+      owner,
+      repo,
+      issue_number: issueNumber,
+    }
+  );
+  const assignees = issueInfo.data.assignees.map((assignee) => assignee.login);
   const pr = await octokit.request(`POST /repos/{owner}/{repo}/pulls`, {
     owner,
     repo,
@@ -190,14 +194,14 @@ const createPR = async (values) => {
   });
   const prNumber = pr.data.number;
   // Set PR properties equal to original issue properties
-  await octokit.request('PATCH /repos/{owner}/{repo}/issues/{issue_number}', {
+  await octokit.request("PATCH /repos/{owner}/{repo}/issues/{issue_number}", {
     owner,
     repo,
     issue_number: prNumber,
     assignees,
     milestone: issueInfo.data.milestone,
     labels: issueInfo.data.labels,
-  })
+  });
   return {
     repo,
     branch,
@@ -207,12 +211,7 @@ const createPR = async (values) => {
 
 // Function called to validate user input and create a PR with submitted values
 // Called when the user submits the CreatePRModal form
-const handleCreatePRSubmitted = async ({
-  ack,
-  view,
-  body,
-  client,
-}) => {
+const handleCreatePRSubmitted = async ({ ack, view, body, client }) => {
   try {
     const ackErrors = { response_action: "errors", errors: {} };
     // Make sure that there isn't an existing PR from the desired branch
@@ -223,13 +222,15 @@ const handleCreatePRSubmitted = async ({
       ackErrors.errors.branch = messages.pr.branchExists;
     }
     // Make sure the selected issue isn't -1 (default option)
-    const repository = view.state.values.repository.repository.selected_option.value;
-    const issue = view.state.values[`${repository}/issue`].issue.selected_option.value;
-    if (issue === '-1') {
+    const repository =
+      view.state.values.repository.repository.selected_option.value;
+    const issue =
+      view.state.values[`${repository}/issue`].issue.selected_option.value;
+    if (issue === "-1") {
       ackErrors.errors[`${repository}/issue`] = messages.pr.invalidIssue;
     }
     // If there are any errors, inform the user
-    if (PRWithBranchExists || issue == '-1') {
+    if (PRWithBranchExists || issue == "-1") {
       await ack(ackErrors);
     } else {
       await ack();

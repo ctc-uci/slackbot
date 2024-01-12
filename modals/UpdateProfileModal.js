@@ -3,7 +3,7 @@ const { plainText } = require("../utils/blockUtils");
 
 const UpdateProfileModal = (user) => {
   const github = user.github;
-  const initialOptions = user?.repos?.map((repo) => ({
+  const initialOptions = user?.repos?.filter((repo) -> repo in repos).map((repo) => ({
     text: plainText(
       `${repos[repo].name} (${repos[repo].owner}/${repos[repo].alias})`
     ),

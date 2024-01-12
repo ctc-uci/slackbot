@@ -1,13 +1,7 @@
 const perms = require("../utils/perms");
 const CTC_USER = "ctc-uci";
 
-const repos = {
-  "commit-the-change-website": {
-    name: "CTC Website",
-    owner: CTC_USER,
-    alias: "commit-the-change-website",
-    permissions: [perms.ADMIN, perms.TECHLEAD, perms.MEMBER],
-  },
+/* old repos
   "abound-food-care-backend": {
     name: "AFC Backend",
     owner: CTC_USER,
@@ -91,6 +85,53 @@ const repos = {
     owner: CTC_USER,
     alias: "the-literacy-project-backend",
     permissions: [perms.ADMIN],
+  },
+*/
+
+/* Pending
+*/
+const repos = {
+  "commit-the-change-website": {
+    name: "CTC Website",
+    owner: CTC_USER,
+    alias: "commit-the-change-website",
+    permissions: [perms.ADMIN, perms.TECHLEAD, perms.MEMBER],
+  },
+  "stand-up-to-trash-frontend": {
+    name: "S2T Frontend",
+    owner: CTC_USER,
+    alias: "stand-up-to-trash-frontend",
+    permissions: [perms.ADMIN, perms.TECHLEAD, perms.MEMBER],
+  },
+  "stand-up-to-trash-backend": {
+    name: "S2T Backend",
+    owner: CTC_USER,
+    alias: "stand-up-to-trash-backend",
+    permissions: [perms.ADMIN, perms.TECHLEAD, perms.MEMBER],
+  },
+  "aiss-frontend": {
+    name: "AISS Frontend",
+    owner: CTC_USER,
+    alias: "aiss-frontend",
+    permissions: [perms.ADMIN, perms.TECHLEAD, perms.MEMBER],
+  },
+  "aiss-backend": {
+    name: "AISS Backend",
+    owner: CTC_USER,
+    alias: "aiss-backend",
+    permissions: [perms.ADMIN, perms.TECHLEAD, perms.MEMBER],
+  },
+  "fph-frontend": {
+    name: "FPH Frontend",
+    owner: CTC_USER,
+    alias: "fph-frontend",
+    permissions: [perms.ADMIN, perms.TECHLEAD, perms.MEMBER],
+  },
+  "fph-backend": {
+    name: "FPH Backend",
+    owner: CTC_USER,
+    alias: "fph-backend",
+    permissions: [perms.ADMIN, perms.TECHLEAD, perms.MEMBER],
   },
   "slackbot-playground": {
     name: "Slackbot Playground",

@@ -34,7 +34,7 @@ mongoConnection.once("open", () => {
 Bot.command("/pr", openCreatePRModal);
 Bot.command("/profile", openUpdateProfileModal);
 Bot.command("/issue", openCreateIssueModal);
-Bot.command("/matchy", generateMatchyMeetups);
+// Bot.command("/matchy", generateMatchyMeetups);
 Bot.command("/clear", clearMatchy);
 Bot.action("repository", updateIssueOptions);
 
@@ -49,7 +49,8 @@ Bot.view("update-profile", handleUpdateProfileSubmitted);
   console.log(`⚡️ Slack Bolt app is running on port ${port}!`);
 
   const rule = new schedule.RecurrenceRule();
-  rule.dayOfWeek = 3;
+  rule.tz = 'America/Los_Angeles';
+  rule.dayOfWeek = 4;
   rule.hour = 17;
   rule.minute = 0;
   schedule.scheduleJob(rule, async () => {

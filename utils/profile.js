@@ -4,7 +4,7 @@ const User = require("../models/user.model");
 const UserModel = require("../models/user.model");
 const perms = require("../utils/perms");
 const messages = require("../utils/msgs");
-const octokit = require('./octokit');
+const octokit = require("./octokit");
 
 // Gets the current user from MongoDB (creates it if doesn't exist) and opens a PR to update user profile
 const openUpdateProfileModal = async ({ command, ack, client }) => {
@@ -22,12 +22,12 @@ const openUpdateProfileModal = async ({ command, ack, client }) => {
           // slackName,
           role: perms.MEMBER,
           repos: [],
-          github: '',
+          github: "",
           rep: 0,
           matchyEnabled: false,
         });
         user = await UserModel.findOne({ slackId });
-      };
+      }
     } catch (err) {
       console.log(err.message);
     }
@@ -66,12 +66,12 @@ const handleUpdateProfileSubmitted = async ({
       : false;
     const github = v.github.github.value;
     try {
-      const githubUser = await octokit.request('GET /users/{username}', {
+      const githubUser = await octokit.request("GET /users/{username}", {
         username: github,
       });
-      await octokit.request('POST /orgs/{org}/invitations', {
-        org: 'ctc-uci',
-        role: 'direct_member',
+      await octokit.request("POST /orgs/{org}/invitations", {
+        org: "ctc-uci",
+        role: "direct_member",
         invitee_id: githubUser.data.id,
       });
     } catch (err) {
@@ -101,7 +101,7 @@ const handleUpdateProfileSubmitted = async ({
       client.chat.postEphemeral({
         text: messages.profile.success,
         channel: body.user.id,
-        user: body.user.id
+        user: body.user.id,
       });
     }
   } catch (e) {
