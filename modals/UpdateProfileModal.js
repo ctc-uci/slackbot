@@ -3,7 +3,7 @@ const { plainText } = require("../utils/blockUtils");
 
 const UpdateProfileModal = (user) => {
   const github = user.github;
-  const initialOptions = user?.repos?.filter((repo) -> repo in repos).map((repo) => ({
+  const initialOptions = user?.repos?.filter((repo) => repo in repos).map((repo) => ({
     text: plainText(
       `${repos[repo].name} (${repos[repo].owner}/${repos[repo].alias})`
     ),
@@ -63,7 +63,7 @@ const UpdateProfileModal = (user) => {
               {
                 text: plainText("Sign me up for Matchy!"),
                 description: plainText(
-                  "Matchy is an opt-in program for getting to know and meeting up with a new CTC member every week!"
+                  "Meet up with a new CTC member every week!"
                 ),
                 value: "matchy",
               },
@@ -73,7 +73,7 @@ const UpdateProfileModal = (user) => {
                 {
                   text: plainText("Sign me up for Matchy!"),
                   description: plainText(
-                    "Matchy is an opt-in program for getting to know and meeting up with a new CTC member every week!"
+                    "Meet up with a new CTC member every week!"
                   ),
                   value: "matchy",
                 },
