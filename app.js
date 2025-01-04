@@ -34,8 +34,11 @@ mongoConnection.once("open", () => {
 Bot.command("/pr", openCreatePRModal);
 Bot.command("/profile", openUpdateProfileModal);
 Bot.command("/issue", openCreateIssueModal);
+
+// For debugging only
 // Bot.command("/matchy", generateMatchyMeetups);
-Bot.command("/clear", clearMatchy);
+// Bot.command("/clear", clearMatchy);
+
 Bot.action("repository", updateIssueOptions);
 
 Bot.view("create-pr", handleCreatePRSubmitted);
