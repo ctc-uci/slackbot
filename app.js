@@ -53,7 +53,7 @@ Bot.view("update-profile", handleUpdateProfileSubmitted);
 
   const rule = new schedule.RecurrenceRule();
   rule.tz = 'America/Los_Angeles';
-  rule.dayOfWeek = 4;
+  rule.dayOfWeek = 3;
   rule.hour = 17;
   rule.minute = 0;
   schedule.scheduleJob(rule, async () => {
