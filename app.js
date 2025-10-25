@@ -1,5 +1,6 @@
 const schedule = require("node-schedule");
 const mongoose = require("mongoose");
+const express = require("express");
 
 const Bot = require("./utils/bot");
 
@@ -106,8 +107,12 @@ Bot.event("team_join", async ({ event }) => {
   
   console.log('📅 Matchy scheduled for Wednesdays at 5:00 PM PST');
   
+  // Create Express app for webhook endpoint
+  const app = express();
+  app.use(express.json());
+  
   // Add webhook endpoint for Railway/GitHub Actions cron
-  Bot.app.post('/matchy-scheduled', async (req, res) => {
+  app.post('/matchy-scheduled', async (req, res) => {
     try {
       console.log('🕐 Webhook triggered: Running scheduled matchy generation...');
       
@@ -140,6 +145,12 @@ Bot.event("team_join", async ({ event }) => {
         timestamp: new Date().toISOString()
       });
     }
+  });
+  
+  // Start Express server on a different port
+  const webhookPort = process.env.PORT || 3000;
+  app.listen(webhookPort, () => {
+    console.log(`🔗 Webhook server running on port ${webhookPort}`);
   });
   
   console.log('🚀 Slackbot ready for Railway deployment!');
