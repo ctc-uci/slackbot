@@ -50,18 +50,12 @@ Bot.command("/clear", clearMatchy);
 // Bot.action("skip_user", handleUserApproval);
 
 // Event listeners for automatic member approval
-// Bot.event("member_joined_channel", async ({ event }) => {
-//   // Only process events for the matchy channel
-//   if (event.channel === "C01FL4VCE1Z") {
-//     console.log(`Member joined channel: ${event.user}`);
-//     await autoApproveNewMember(event.user);
-//   }
-// });
-
-// Also listen for team_join events (when someone joins the workspace)
-Bot.event("team_join", async ({ event }) => {
-  console.log(`New user joined workspace: ${event.user.id}`);
-  // Note: This doesn't automatically add them to matchy since they need to join the channel first
+Bot.event("member_joined_channel", async ({ event }) => {
+  // Only process events for the matchy channel
+  if (event.channel === "C01FL4VCE1Z") {
+    console.log(`Member joined channel: ${event.user}`);
+    await autoApproveNewMember(event.user);
+  }
 });
 
 // Bot.action("repository", updateIssueOptions);
