@@ -755,8 +755,8 @@ const showApprovalSummary = async (respond) => {
   await respond(output);
 };
 
-// Automatically approve new members when they join the channel
-const autoApproveNewMember = async (userId) => {
+// Add new members to JSON when they join the channel (no auto-approval)
+const addNewMemberToJSON = async (userId) => {
   try {
     console.log(`New member joined: ${userId}`);
     
@@ -805,7 +805,7 @@ const autoApproveNewMember = async (userId) => {
     // Save updated data
     saveMembersData(data);
     
-    console.log(`✅ Auto-approved new member: ${newMember.name} (@${userId})`);
+    console.log(`✅ Added new member to JSON: ${newMember.name} (@${userId})`);
     
     // Send notification to channel
     // try {
@@ -818,7 +818,7 @@ const autoApproveNewMember = async (userId) => {
     // }
     
   } catch (error) {
-    console.error("Error auto-approving new member:", error);
+    console.error("Error adding new member to JSON:", error);
   }
 };
 
@@ -872,5 +872,5 @@ module.exports = {
   loadMembersDataCommand,
   fetchChannelUsers,
   handleUserApproval,
-  autoApproveNewMember,
+  addNewMemberToJSON,
 };
