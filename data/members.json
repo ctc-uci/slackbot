@@ -1,151 +1,34 @@
 {
   "members": [
     {
-      "slackId": "U01D37G164B",
-      "name": "Alice Johnson",
-      "role": "ADMIN",
-      "repos": [
-        "project-alpha",
-        "project-beta"
-      ],
-      "github": "alice-j",
-      "rep": 15,
-      "matchyEnabled": true
-    },
-    {
-      "slackId": "U01CZU6U0KX",
-      "name": "Bob Smith",
-      "role": "TECHLEAD",
-      "repos": [
-        "project-alpha",
-        "project-gamma"
-      ],
-      "github": "bob-smith",
-      "rep": 12,
-      "matchyEnabled": true
-    },
-    {
-      "slackId": "U02FE6BFJMC",
-      "name": "Carol Davis",
+      "slackId": "U063K9AG40Y",
+      "name": "Brendan Lieu",
       "role": "MEMBER",
-      "repos": [
-        "project-beta"
-      ],
-      "github": "carol-d",
-      "rep": 8,
-      "matchyEnabled": true
+      "repos": [],
+      "github": "",
+      "rep": 0,
+      "matchyEnabled": true,
+      "approved": true
     },
     {
-      "slackId": "U02HUR2J3GT",
-      "name": "David Wilson",
+      "slackId": "U07TQVBJEGG",
+      "name": "Claire Phan",
       "role": "MEMBER",
-      "repos": [
-        "project-gamma",
-        "project-delta"
-      ],
-      "github": "david-w",
-      "rep": 6,
-      "matchyEnabled": true
+      "repos": [],
+      "github": "",
+      "rep": 0,
+      "matchyEnabled": true,
+      "approved": true
     },
     {
-      "slackId": "U01D965LR8U",
-      "name": "Eva Brown",
-      "role": "TECHLEAD",
-      "repos": [
-        "project-delta",
-        "project-alpha"
-      ],
-      "github": "eva-brown",
-      "rep": 10,
-      "matchyEnabled": true
-    },
-    {
-      "slackId": "U02FLU7T5GA",
-      "name": "Frank Miller",
+      "slackId": "U07T4JEEUSG",
+      "name": "Alex Espejo",
       "role": "MEMBER",
-      "repos": [
-        "project-beta",
-        "project-gamma"
-      ],
-      "github": "frank-m",
-      "rep": 4,
-      "matchyEnabled": false
-    },
-    {
-      "slackId": "U02HCPB8RPH",
-      "name": "Grace Lee",
-      "role": "MEMBER",
-      "repos": [
-        "project-delta"
-      ],
-      "github": "grace-l",
-      "rep": 7,
-      "matchyEnabled": true
-    },
-    {
-      "slackId": "U02JH2R1U00",
-      "name": "Henry Chen",
-      "role": "ADMIN",
-      "repos": [
-        "project-alpha",
-        "project-beta",
-        "project-gamma"
-      ],
-      "github": "henry-c",
-      "rep": 18,
-      "matchyEnabled": true
+      "repos": [],
+      "github": "",
+      "rep": 0,
+      "matchyEnabled": true,
+      "approved": true
     }
-  ],
-  "previousMatches": {
-    "U02JH2R1U00": [
-      "U01D37G164B",
-      "U02FE6BFJMC",
-      "U01CZU6U0KX",
-      "U01D965LR8U",
-      "U02HCPB8RPH",
-      "U02HUR2J3GT"
-    ],
-    "U01D37G164B": [
-      "U02JH2R1U00",
-      "U02FE6BFJMC",
-      "U02HCPB8RPH",
-      "U02HUR2J3GT",
-      "U01CZU6U0KX",
-      "U01D965LR8U"
-    ],
-    "U02FE6BFJMC": [
-      "U02JH2R1U00",
-      "U01D37G164B",
-      "U02HUR2J3GT",
-      "U01D965LR8U",
-      "U01CZU6U0KX"
-    ],
-    "U01CZU6U0KX": [
-      "U02HCPB8RPH",
-      "U01D965LR8U",
-      "U02JH2R1U00",
-      "U02HUR2J3GT",
-      "U01D37G164B",
-      "U02FE6BFJMC"
-    ],
-    "U02HCPB8RPH": [
-      "U01CZU6U0KX",
-      "U01D37G164B",
-      "U02JH2R1U00"
-    ],
-    "U01D965LR8U": [
-      "U02HUR2J3GT",
-      "U01CZU6U0KX",
-      "U02JH2R1U00",
-      "U02FE6BFJMC",
-      "U01D37G164B"
-    ],
-    "U02HUR2J3GT": [
-      "U01D965LR8U",
-      "U02FE6BFJMC",
-      "U01CZU6U0KX",
-      "U01D37G164B",
-      "U02JH2R1U00"
-    ]
-  }
+  ]
 }
