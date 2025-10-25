@@ -1,16 +1,6 @@
 {
   "members": [
     {
-      "slackId": "U063K9AG40Y",
-      "name": "Brendan Lieu",
-      "role": "MEMBER",
-      "repos": [],
-      "github": "",
-      "rep": 0,
-      "matchyEnabled": true,
-      "approved": true
-    },
-    {
       "slackId": "U07TQVBJEGG",
       "name": "Claire Phan",
       "role": "MEMBER",
