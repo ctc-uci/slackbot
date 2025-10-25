@@ -51,10 +51,19 @@ Bot.command("/clear", clearMatchy);
 
 // Event listeners for automatic member approval
 Bot.event("member_joined_channel", async ({ event }) => {
+  console.log(`🔍 DEBUG: member_joined_channel event received:`, {
+    channel: event.channel,
+    user: event.user,
+    channelType: event.channel_type,
+    timestamp: event.ts
+  });
+  
   // Only process events for the matchy channel
   if (event.channel === "C01FL4VCE1Z") {
-    console.log(`Member joined channel: ${event.user}`);
+    console.log(`✅ Member joined matchy channel: ${event.user}`);
     await autoApproveNewMember(event.user);
+  } else {
+    console.log(`❌ Event from different channel: ${event.channel}`);
   }
 });
 
