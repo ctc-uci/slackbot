@@ -14,7 +14,7 @@ const {
   handleUpdateProfileSubmitted,
 } = require("./utils/profile");
 
-const { generateMatchyMeetups, clearMatchy } = require("./utils/matchy");
+const { generateMatchyMeetups, clearMatchy } = require("./utils/matchy-json");
 
 const {
   openCreateIssueModal,
@@ -22,6 +22,8 @@ const {
 } = require("./utils/issue");
 
 // Mongoose for connecting to MongoDB
+// Temporarily disabled for testing
+/*
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -30,20 +32,21 @@ const mongoConnection = mongoose.connection;
 mongoConnection.once("open", () => {
   console.log("MongoDB database connection established successfully");
 });
+*/
 
-Bot.command("/pr", openCreatePRModal);
-Bot.command("/profile", openUpdateProfileModal);
-Bot.command("/issue", openCreateIssueModal);
+// Bot.command("/pr", openCreatePRModal);
+// Bot.command("/profile", openUpdateProfileModal);
+// Bot.command("/issue", openCreateIssueModal);
 
 // For debugging only
-// Bot.command("/matchy", generateMatchyMeetups);
-// Bot.command("/clear", clearMatchy);
+Bot.command("/matchy", generateMatchyMeetups);
+Bot.command("/clear", clearMatchy);
 
-Bot.action("repository", updateIssueOptions);
+// Bot.action("repository", updateIssueOptions);
 
-Bot.view("create-pr", handleCreatePRSubmitted);
-Bot.view("create-issue", handleCreateIssueSubmitted);
-Bot.view("update-profile", handleUpdateProfileSubmitted);
+// Bot.view("create-pr", handleCreatePRSubmitted);
+// Bot.view("create-issue", handleCreateIssueSubmitted);
+// Bot.view("update-profile", handleUpdateProfileSubmitted);
 
 (async () => {
   const port = 5000;
@@ -51,12 +54,12 @@ Bot.view("update-profile", handleUpdateProfileSubmitted);
   await Bot.start();
   console.log(`⚡️ Slack Bolt app is running on port ${port}!`);
 
-  const rule = new schedule.RecurrenceRule();
-  rule.tz = 'America/Los_Angeles';
-  rule.dayOfWeek = 3;
-  rule.hour = 17;
-  rule.minute = 0;
-  schedule.scheduleJob(rule, async () => {
-    await generateMatchyMeetups();
-  });
+  // const rule = new schedule.RecurrenceRule();
+  // rule.tz = 'America/Los_Angeles';
+  // rule.dayOfWeek = 3;
+  // rule.hour = 17;
+  // rule.minute = 0;
+  // schedule.scheduleJob(rule, async () => {
+  //   await generateMatchyMeetups();
+  // });
 })();
