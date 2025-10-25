@@ -808,14 +808,14 @@ const autoApproveNewMember = async (userId) => {
     console.log(`✅ Auto-approved new member: ${newMember.name} (@${userId})`);
     
     // Send notification to channel
-    try {
-      await Bot.client.chat.postMessage({
-        channel: "C01FL4VCE1Z", // The matchy channel
-        text: `🎉 **Welcome to Matchy!**\n\n**${newMember.name}** has joined the channel and been automatically added to the matchy system!\n\nThey're now eligible for weekly meetups. 👋`
-      });
-    } catch (error) {
-      console.error("Error sending welcome message:", error);
-    }
+    // try {
+    //   await Bot.client.chat.postMessage({
+    //     channel: "C01FL4VCE1Z", // The matchy channel
+    //     text: `🎉 **Welcome to Matchy!**\n\n**${newMember.name}** has joined the channel and been automatically added to the matchy system!\n\nThey're now eligible for weekly meetups. 👋`
+    //   });
+    // } catch (error) {
+    //   console.error("Error sending welcome message:", error);
+    // }
     
   } catch (error) {
     console.error("Error auto-approving new member:", error);
