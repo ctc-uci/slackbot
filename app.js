@@ -36,7 +36,7 @@ mongoConnection.once("open", () => {
 */
 
 // Bot.command("/pr", openCreatePRModal);
-// Bot.command("/profile", openUpdateProfileModal);
+Bot.command("/profile", loadMembersDataCommand);
 // Bot.command("/issue", openCreateIssueModal);
 
 // For debugging only
@@ -45,18 +45,18 @@ Bot.command("/clear", clearMatchy);
 
 
 // Button action handlers (only for user approval in /clear command)
-Bot.action("approve_user", handleUserApproval);
-Bot.action("decline_user", handleUserApproval);
-Bot.action("skip_user", handleUserApproval);
+// Bot.action("approve_user", handleUserApproval);
+// Bot.action("decline_user", handleUserApproval);
+// Bot.action("skip_user", handleUserApproval);
 
 // Event listeners for automatic member approval
-Bot.event("member_joined_channel", async ({ event }) => {
-  // Only process events for the matchy channel
-  if (event.channel === "C01FL4VCE1Z") {
-    console.log(`Member joined channel: ${event.user}`);
-    await autoApproveNewMember(event.user);
-  }
-});
+// Bot.event("member_joined_channel", async ({ event }) => {
+//   // Only process events for the matchy channel
+//   if (event.channel === "C01FL4VCE1Z") {
+//     console.log(`Member joined channel: ${event.user}`);
+//     await autoApproveNewMember(event.user);
+//   }
+// });
 
 // Also listen for team_join events (when someone joins the workspace)
 Bot.event("team_join", async ({ event }) => {
