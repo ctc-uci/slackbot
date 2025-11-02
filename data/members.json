@@ -19,6 +19,27 @@
       "rep": 0,
       "matchyEnabled": true,
       "approved": true
+    },
+    {
+      "slackId": "U07SVEE9QGN",
+      "name": "Margaret Galvez",
+      "role": "MEMBER",
+      "repos": [],
+      "github": "",
+      "rep": 0,
+      "matchyEnabled": true,
+      "approved": true
+    },
+    {
+      "slackId": "U07SMH3R50X",
+      "name": "Arnav Kanekar",
+      "role": "MEMBER",
+      "repos": [],
+      "github": "",
+      "rep": 0,
+      "matchyEnabled": true,
+      "approved": true
     }
+
   ]
 }

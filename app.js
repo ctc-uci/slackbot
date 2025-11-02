@@ -52,7 +52,7 @@ Bot.command("/profile", loadMembersDataCommand);
 
 Bot.command("/matchy", addUserToMatchy);
 Bot.command("/leavematchy", removeUserFromMatchy);
-// Bot.command("/exportmembers", exportMembersJSON);
+Bot.command("/exportmembers", exportMembersJSON);
 // Bot.command("/clear", clearMatchy);
 
 
