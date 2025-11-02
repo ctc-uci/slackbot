@@ -15,7 +15,7 @@ const {
   handleUpdateProfileSubmitted,
 } = require("./utils/profile");
 
-const { generateMatchyMeetups, generateMatches, clearMatchy, loadMembersDataCommand, fetchChannelUsers, handleUserApproval } = require("./utils/matchy-json");
+const { addUserToMatchy, generateMatches, clearMatchy, loadMembersDataCommand } = require("./utils/matchy-json");
 
 const {
   openCreateIssueModal,

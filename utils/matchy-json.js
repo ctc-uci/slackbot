@@ -772,7 +772,6 @@ module.exports = {
   generateMatches,
   clearMatchy,
   loadMembersDataCommand,
-  fetchChannelUsers,
   handleUserApproval,
   addNewMemberToJSON,
 };
