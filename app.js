@@ -51,7 +51,7 @@ Bot.command("/profile", loadMembersDataCommand);
 
 
 Bot.command("/matchy", addUserToMatchy);
-Bot.command("/leave", removeUserFromMatchy);
+Bot.command("/leavematchy", removeUserFromMatchy);
 // Bot.command("/clear", clearMatchy);
 
 
