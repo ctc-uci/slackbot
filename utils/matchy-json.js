@@ -691,14 +691,10 @@ const loadMembersDataCommand = async ({ ack, respond }) => {
       output += `**Matchy Disabled:** ${members.filter(m => !m.matchyEnabled).length}\n\n`;
       
       // Show first few members as preview
-      output += "**Preview (first 5 members):**\n";
-      members.slice(0, 5).forEach((member, index) => {
+      output += "**Preview:**\n";
+      members.forEach((member, index) => {
         output += `${index + 1}. ${member.name || 'Unknown'} (${member.role || 'Unknown'}) - ${member.matchyEnabled ? '✅' : '❌'}\n`;
       });
-      
-      if (members.length > 5) {
-        output += `... and ${members.length - 5} more members\n`;
-      }
       
       output += `\n**Previous Matches:** ${Object.keys(previousMatches).length} members have match history\n`;
     }
@@ -710,6 +706,79 @@ const loadMembersDataCommand = async ({ ack, respond }) => {
   } catch (error) {
     console.error("Error loading member data:", error);
     await respond("❌ Error loading member data. Check the logs for details.");
+  }
+};
+
+// Export members JSON file through Slack
+const exportMembersJSON = async ({ ack, respond, command }) => {
+  try {
+    await ack();
+    console.log("Exporting members JSON via command...");
+    
+    // Load members data
+    const data = loadMembersData();
+    const jsonString = JSON.stringify(data, null, 2);
+    
+    // Get the file path
+    const dataPath = path.join(__dirname, "../data/members.json");
+    
+    // Create a buffer from the JSON string
+    const buffer = Buffer.from(jsonString, 'utf8');
+    
+    // Upload file to Slack
+    try {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const filename = `members-export-${timestamp}.json`;
+      
+      // Use channel_id if available, otherwise use user_id for DMs
+      const targetChannel = command.channel_id || command.user_id;
+      
+      const uploadResult = await Bot.client.files.upload({
+        channels: targetChannel,
+        file: buffer,
+        filename: filename,
+        title: "Matchy Members Export",
+        initial_comment: `📦 *Members JSON Export*\n\nExported at: ${new Date().toLocaleString()}\nTotal members: ${data.members?.length || 0}\n\nThis file contains the complete members data and match history.`
+      });
+      
+      if (uploadResult.ok) {
+        console.log(`✅ Successfully exported members JSON`);
+        await respond("✅ Members JSON file exported successfully! Check the file above. 📎");
+      } else {
+        throw new Error(uploadResult.error || "Unknown error uploading file");
+      }
+      
+    } catch (uploadError) {
+      console.error("Error uploading file to Slack:", uploadError);
+      // Fallback: send JSON as a code block if file upload fails
+      const jsonPreview = jsonString.length > 3000 
+        ? jsonString.substring(0, 3000) + "\n... (truncated)"
+        : jsonString;
+      
+      await respond({
+        text: "📦 *Members JSON Export*\n\n*Note: File upload failed, showing preview instead:*",
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: "📦 *Members JSON Export*\n\n*Note: File upload failed, showing preview instead:*"
+            }
+          },
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `\`\`\`json\n${jsonPreview}\n\`\`\``
+            }
+          }
+        ]
+      });
+    }
+    
+  } catch (error) {
+    console.error("Error in exportMembersJSON:", error);
+    await respond("❌ Error exporting members JSON. Check the logs for details.");
   }
 };
 
@@ -830,6 +899,7 @@ module.exports = {
   generateMatches,
   clearMatchy,
   loadMembersDataCommand,
+  exportMembersJSON,
   handleUserApproval,
   addNewMemberToJSON,
 };
