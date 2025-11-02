@@ -470,6 +470,63 @@ const addUserToMatchy = async ({ ack, respond, command }) => {
   }
 };
 
+// Function to remove user who ran the command from JSON
+const removeUserFromMatchy = async ({ ack, respond, command }) => {
+  try {
+    await ack();
+    console.log("Removing user from matchy via command...");
+    
+    // Get the user who ran the command
+    const userId = command?.user_id;
+    
+    if (!userId) {
+      await respond("❌ Could not identify user. Please try again.");
+      return;
+    }
+    
+    // Load members data
+    const membersData = loadMembersData();
+    
+    // Find the user in the members array
+    const memberIndex = membersData.members.findIndex(member => member.slackId === userId);
+    
+    if (memberIndex === -1) {
+      await respond("❌ You're not in the Matchy system!");
+      return;
+    }
+    
+    // Get member info before removing
+    const memberToRemove = membersData.members[memberIndex];
+    
+    // Remove the user from the members array
+    membersData.members.splice(memberIndex, 1);
+    
+    // Also remove them from previous matches if they exist
+    if (membersData.previousMatches) {
+      // Remove them as a key
+      delete membersData.previousMatches[userId];
+      
+      // Remove them from other members' previous matches
+      Object.keys(membersData.previousMatches).forEach(memberId => {
+        if (Array.isArray(membersData.previousMatches[memberId])) {
+          membersData.previousMatches[memberId] = 
+            membersData.previousMatches[memberId].filter(id => id !== userId);
+        }
+      });
+    }
+    
+    // Save updated data to JSON file
+    saveMembersData(membersData);
+    
+    console.log(`✅ Removed member from JSON: ${memberToRemove.name} (@${userId})`);
+    await respond(`✅ You've been removed from the Matchy system!\n\nWe're sorry to see you go, ${memberToRemove.name}! 😢\n\nYou can always rejoin by running \`/matchy\` again.`);
+    
+  } catch (error) {
+    console.error("Error in removeUserFromMatchy:", error);
+    await respond("❌ Error removing you from Matchy. Check the logs for details.");
+  }
+};
+
 // Function to actually generate and create matches (used by scheduled jobs)
 const generateMatches = async ({ respond }) => {
   try {
@@ -769,6 +826,7 @@ const handleUserApproval = async ({ ack, respond, action }) => {
 
 module.exports = {
   addUserToMatchy,
+  removeUserFromMatchy,
   generateMatches,
   clearMatchy,
   loadMembersDataCommand,

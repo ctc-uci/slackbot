@@ -15,7 +15,7 @@ const {
   handleUpdateProfileSubmitted,
 } = require("./utils/profile");
 
-const { addUserToMatchy, generateMatches, clearMatchy, loadMembersDataCommand } = require("./utils/matchy-json");
+const { addUserToMatchy, removeUserFromMatchy, generateMatches, clearMatchy, loadMembersDataCommand } = require("./utils/matchy-json");
 
 const {
   openCreateIssueModal,
@@ -51,7 +51,8 @@ Bot.command("/profile", loadMembersDataCommand);
 
 
 Bot.command("/matchy", addUserToMatchy);
-Bot.command("/clear", clearMatchy);
+Bot.command("/leave", removeUserFromMatchy);
+// Bot.command("/clear", clearMatchy);
 
 
 // Bot.action("repository", updateIssueOptions);
