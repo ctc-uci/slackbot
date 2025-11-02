@@ -15,7 +15,7 @@ const {
   handleUpdateProfileSubmitted,
 } = require("./utils/profile");
 
-const { generateMatchyMeetups, clearMatchy, loadMembersDataCommand, fetchChannelUsers, handleUserApproval, addNewMemberToJSON } = require("./utils/matchy-json");
+const { generateMatchyMeetups, generateMatches, clearMatchy, loadMembersDataCommand, fetchChannelUsers, handleUserApproval } = require("./utils/matchy-json");
 
 const {
   openCreateIssueModal,
@@ -37,45 +37,22 @@ mongoConnection.once("open", () => {
 
 // Bot.command("/pr", openCreatePRModal);
 Bot.command("/profile", loadMembersDataCommand);
-Bot.command("/issue", async ({ ack, respond }) => {
-  await ack();
-  await respond("🧪 Testing add member to JSON...");
+// Bot.command("/issue", async ({ ack, respond }) => {
+//   await ack();
+//   await respond("🧪 Testing add member to JSON...");
   
-  // Test with your user ID
-  const testUserId = "U063K9AG40Y"; // Replace with your actual Slack user ID
+//   // Test with your user ID
+//   const testUserId = "U063K9AG40Y"; // Replace with your actual Slack user ID
   
-  console.log("🧪 Testing addNewMemberToJSON function...");
-  await addNewMemberToJSON(testUserId);
-  await respond("✅ Test completed! Check logs and members.json file.");
-});
+//   console.log("🧪 Testing addNewMemberToJSON function...");
+//   await addNewMemberToJSON(testUserId);
+//   await respond("✅ Test completed! Check logs and members.json file.");
+// });
 
-// For debugging only
-Bot.command("/matchy", generateMatchyMeetups);
+
+Bot.command("/matchy", addUserToMatchy);
 Bot.command("/clear", clearMatchy);
 
-
-// Button action handlers (only for user approval in /clear command)
-// Bot.action("approve_user", handleUserApproval);
-// Bot.action("decline_user", handleUserApproval);
-// Bot.action("skip_user", handleUserApproval);
-
-// Event listeners for automatic member approval
-Bot.event("member_joined_channel", async ({ event }) => {
-  console.log(`🔍 DEBUG: member_joined_channel event received:`, {
-    channel: event.channel,
-    user: event.user,
-    channelType: event.channel_type,
-    timestamp: event.ts
-  });
-  
-  // Only process events for the matchy channel
-  if (event.channel === "C01FL4VCE1Z") {
-    console.log(`✅ Member joined matchy channel: ${event.user}`);
-    await addNewMemberToJSON(event.user);
-  } else {
-    console.log(`❌ Event from different channel: ${event.channel}`);
-  }
-});
 
 // Bot.action("repository", updateIssueOptions);
 
@@ -112,7 +89,7 @@ Bot.event("member_joined_channel", async ({ event }) => {
         }
       };
       
-      await generateMatchyMeetups(mockContext);
+      await generateMatches(mockContext);
     } catch (error) {
       console.error('Error in scheduled matchy generation:', error);
     }
@@ -145,7 +122,7 @@ Bot.event("member_joined_channel", async ({ event }) => {
         }
       };
       
-      await generateMatchyMeetups(mockContext);
+      await generateMatches(mockContext);
       res.status(200).json({ 
         success: true, 
         message: 'Matchy generation completed',

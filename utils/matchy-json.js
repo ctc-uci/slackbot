@@ -397,10 +397,82 @@ const formatMatches = (matches, membersData, allowRepeats = false) => {
   return output;
 };
 
-// Main function to generate and automatically create matches
-const generateMatchyMeetups = async ({ ack, respond }) => {
+// Main function to add user who ran /matchy to JSON
+const addUserToMatchy = async ({ ack, respond, command }) => {
   try {
     await ack();
+    console.log("Adding user to matchy via /matchy command...");
+    
+    // Get the user who ran the command
+    const userId = command?.user_id;
+    
+    if (!userId) {
+      await respond("❌ Could not identify user. Please try again.");
+      return;
+    }
+    
+    // Load members data
+    const membersData = loadMembersData();
+    
+    // Check if user already exists
+    const existingMember = membersData.members.find(member => member.slackId === userId);
+    
+    if (existingMember) {
+      await respond(`✅ You're already in the Matchy system!`);
+      return;
+    }
+    
+    // Get user info from Slack
+    try {
+      const userResult = await Bot.client.users.info({ user: userId });
+      
+      if (!userResult.ok || !userResult.user) {
+        await respond("❌ Error fetching your user info. Please try again.");
+        return;
+      }
+      
+      const user = userResult.user;
+      
+      // Skip bots and deleted users
+      if (user.is_bot || user.deleted) {
+        await respond("❌ Bots cannot be added to Matchy.");
+        return;
+      }
+      
+      // Create new member object
+      const newMember = {
+        slackId: user.id,
+        name: user.real_name || user.display_name || user.name || "Unknown",
+        role: "MEMBER",
+        repos: [],
+        github: "",
+        rep: 0,
+        matchyEnabled: true
+      };
+      
+      // Add to members array
+      membersData.members.push(newMember);
+      
+      // Save to JSON file
+      saveMembersData(membersData);
+      
+      console.log(`✅ Added new member to JSON: ${newMember.name} (@${userId})`);
+      await respond(`✅ You've been added to the Matchy system!\n\nYour profile:\n• Name: ${newMember.name}\n• Matchy Enabled: Yes\n\nYou'll now be included in weekly matchy meetups! 🎉`);
+      
+    } catch (error) {
+      console.error(`Error fetching user info for ${userId}:`, error);
+      await respond("❌ Error adding you to Matchy. Check the logs for details.");
+    }
+    
+  } catch (error) {
+    console.error("Error in generateMatchyMeetups:", error);
+    await respond("❌ Error processing /matchy command. Check the logs for details.");
+  }
+};
+
+// Function to actually generate and create matches (used by scheduled jobs)
+const generateMatches = async ({ respond }) => {
+  try {
     console.log("Generating Matchy meetups...");
     
     const membersData = loadMembersData();
@@ -411,7 +483,12 @@ const generateMatchyMeetups = async ({ ack, respond }) => {
     console.log("Previous matches:", previousMatches);
     
     if (members.length < 2) {
-      await respond("❌ Not enough members enabled for Matchy! Need at least 2 people.");
+      const message = "❌ Not enough members enabled for Matchy! Need at least 2 people.";
+      if (respond) {
+        await respond(message);
+      } else {
+        console.log(message);
+      }
       return;
     }
     
@@ -427,8 +504,10 @@ const generateMatchyMeetups = async ({ ack, respond }) => {
     console.log("Generated and created matches:", currentMatches);
     
   } catch (error) {
-    console.error("Error in generateMatchyMeetups:", error);
-    await respond("❌ Error generating matches. Check the logs for details.");
+    console.error("Error in generateMatches:", error);
+    if (respond) {
+      await respond("❌ Error generating matches. Check the logs for details.");
+    }
   }
 };
 
@@ -577,184 +656,6 @@ const loadMembersDataCommand = async ({ ack, respond }) => {
   }
 };
 
-// Store pending users for approval (only used for /clear command)
-let pendingUsers = [];
-let currentUserIndex = 0;
-
-// Fetch users from Slack channel and show for approval
-const fetchChannelUsers = async ({ ack, respond }) => {
-  try {
-    await ack();
-    
-    const channelId = "C01FL4VCE1Z"; // The matchy channel ID
-    
-    // Get channel members
-    const membersResult = await Bot.client.conversations.members({
-      channel: channelId
-    });
-    
-    if (!membersResult.ok) {
-      await respond(`❌ Error fetching channel members: ${membersResult.error}`);
-      return;
-    }
-    
-    const memberIds = membersResult.members;
-    console.log(`Found ${memberIds.length} members in channel`);
-    
-    // Get user info for each member
-    const users = [];
-    for (const userId of memberIds) {
-      try {
-        const userResult = await Bot.client.users.info({
-          user: userId
-        });
-        
-        if (userResult.ok && userResult.user) {
-          const user = userResult.user;
-          
-          // Skip bots and deleted users
-          if (user.is_bot || user.deleted) {
-            continue;
-          }
-          
-          users.push({
-            slackId: user.id,
-            name: user.real_name || user.display_name || user.name || "Unknown",
-            role: "MEMBER", // Default role, can be updated later
-            repos: [], // Empty initially
-            github: "", // Empty initially
-            rep: 0, // Default rep
-            matchyEnabled: true // Enable by default
-          });
-        }
-      } catch (error) {
-        console.error(`Error fetching user ${userId}:`, error);
-      }
-    }
-    
-    if (users.length === 0) {
-      await respond("❌ No users found in the channel to add.");
-      return;
-    }
-    
-    // Store users for approval process
-    pendingUsers = users;
-    currentUserIndex = 0;
-    
-    // Show first user for approval
-    await showUserForApproval(respond);
-    
-  } catch (error) {
-    console.error("Error fetching channel users:", error);
-    await respond("❌ Error fetching channel users. Check the logs for details.");
-  }
-};
-
-// Show current user for approval
-const showUserForApproval = async (respond) => {
-  if (currentUserIndex >= pendingUsers.length) {
-    // All users processed, show summary
-    await showApprovalSummary(respond);
-    return;
-  }
-  
-  const user = pendingUsers[currentUserIndex];
-  const progress = `${currentUserIndex + 1}/${pendingUsers.length}`;
-  
-  const blocks = [
-    {
-      "type": "section",
-      "text": {
-        "type": "mrkdwn",
-        "text": `🧹 **User Approval Process** (${progress})\n\n**${user.name}** (@${user.slackId})\nRole: ${user.role} | Rep: ${user.rep} | GitHub: ${user.github || 'Not set'}\nMatchy Enabled: ${user.matchyEnabled ? '✅' : '❌'}`
-      }
-    },
-    {
-      "type": "actions",
-      "elements": [
-        {
-          "type": "button",
-          "text": {
-            "type": "plain_text",
-            "text": "✅ Approve"
-          },
-          "action_id": "approve_user",
-          "style": "primary"
-        },
-        {
-          "type": "button",
-          "text": {
-            "type": "plain_text",
-            "text": "❌ Decline"
-          },
-          "action_id": "decline_user",
-          "style": "danger"
-        },
-        {
-          "type": "button",
-          "text": {
-            "type": "plain_text",
-            "text": "⏭️ Skip"
-          },
-          "action_id": "skip_user"
-        }
-      ]
-    }
-  ];
-  
-  await respond({ blocks });
-};
-
-// Show final summary of approved users
-const showApprovalSummary = async (respond) => {
-  const approvedUsers = pendingUsers.filter(user => user.approved === true);
-  const declinedUsers = pendingUsers.filter(user => user.approved === false);
-  const skippedUsers = pendingUsers.filter(user => user.approved === undefined);
-  
-  let output = `🎯 **Approval Complete!**\n\n`;
-  output += `**Approved Users (${approvedUsers.length}):**\n`;
-  
-  if (approvedUsers.length > 0) {
-    approvedUsers.forEach((user, index) => {
-      output += `${index + 1}. **${user.name}** (@${user.slackId})\n`;
-    });
-  } else {
-    output += `None\n`;
-  }
-  
-  if (declinedUsers.length > 0) {
-    output += `\n**Declined Users (${declinedUsers.length}):**\n`;
-    declinedUsers.forEach((user, index) => {
-      output += `${index + 1}. **${user.name}** (@${user.slackId})\n`;
-    });
-  }
-  
-  if (skippedUsers.length > 0) {
-    output += `\n**Skipped Users (${skippedUsers.length}):**\n`;
-    skippedUsers.forEach((user, index) => {
-      output += `${index + 1}. **${user.name}** (@${user.slackId})\n`;
-    });
-  }
-  
-  if (approvedUsers.length > 0) {
-    // Save approved users to JSON
-    const data = loadMembersData();
-    data.members = approvedUsers;
-    data.previousMatches = {};
-    saveMembersData(data);
-    
-    output += `\n✅ **${approvedUsers.length} users saved to members.json**`;
-  } else {
-    output += `\n⚠️ **No users were approved - no changes made to members.json**`;
-  }
-  
-  // Reset for next time
-  pendingUsers = [];
-  currentUserIndex = 0;
-  
-  await respond(output);
-};
-
 // Add new members to JSON when they join the channel (no auto-approval)
 const addNewMemberToJSON = async (userId) => {
   try {
@@ -867,7 +768,8 @@ const handleUserApproval = async ({ ack, respond, action }) => {
 
 
 module.exports = {
-  generateMatchyMeetups,
+  addUserToMatchy,
+  generateMatches,
   clearMatchy,
   loadMembersDataCommand,
   fetchChannelUsers,
