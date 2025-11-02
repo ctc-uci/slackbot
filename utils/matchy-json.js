@@ -418,7 +418,10 @@ const addUserToMatchy = async ({ ack, respond, command }) => {
     const existingMember = membersData.members.find(member => member.slackId === userId);
     
     if (existingMember) {
-      await respond(`✅ You're already in the Matchy system!`);
+        removeUserFromMatchy({ ack: async () => {}, respond: async (message) => {
+          console.log("Removing user from matchy:", message);
+          await respond(`✅ You've been removed from the Matchy system!`);
+        }, command: { user_id: userId } });
       return;
     }
     

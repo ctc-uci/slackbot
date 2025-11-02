@@ -37,22 +37,9 @@ mongoConnection.once("open", () => {
 
 // Bot.command("/pr", openCreatePRModal);
 Bot.command("/profile", loadMembersDataCommand);
-// Bot.command("/issue", async ({ ack, respond }) => {
-//   await ack();
-//   await respond("🧪 Testing add member to JSON...");
-  
-//   // Test with your user ID
-//   const testUserId = "U063K9AG40Y"; // Replace with your actual Slack user ID
-  
-//   console.log("🧪 Testing addNewMemberToJSON function...");
-//   await addNewMemberToJSON(testUserId);
-//   await respond("✅ Test completed! Check logs and members.json file.");
-// });
-
-
 Bot.command("/matchy", addUserToMatchy);
-Bot.command("/leavematchy", removeUserFromMatchy);
-Bot.command("/exportmembers", exportMembersJSON);
+// Bot.command("/leavematchy", removeUserFromMatchy);
+Bot.command("/issue", exportMembersJSON);
 // Bot.command("/clear", clearMatchy);
 
 
