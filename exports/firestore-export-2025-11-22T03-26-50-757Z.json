@@ -1,0 +1,491 @@
+{
+  "matchyData": {
+    "members": {
+      "members": [
+        {
+          "role": "MEMBER",
+          "name": "Alex Espejo",
+          "slackId": "U07T4JEEUSG",
+          "rep": 0,
+          "repos": [],
+          "matchyEnabled": true,
+          "github": ""
+        },
+        {
+          "rep": 0,
+          "repos": [],
+          "slackId": "U09N03MF96W",
+          "matchyEnabled": true,
+          "name": "Sophie Choi",
+          "github": "",
+          "role": "MEMBER"
+        },
+        {
+          "slackId": "U09MJK632TZ",
+          "role": "MEMBER",
+          "repos": [],
+          "name": "Meredith Lo",
+          "rep": 0,
+          "github": "",
+          "matchyEnabled": true
+        },
+        {
+          "role": "MEMBER",
+          "repos": [],
+          "slackId": "U0631Q51G04",
+          "name": "Nathan Luca Pietrantonio",
+          "matchyEnabled": true,
+          "rep": 0,
+          "github": ""
+        },
+        {
+          "github": "",
+          "name": "Pradosh Thirunavukkarasu",
+          "matchyEnabled": true,
+          "repos": [],
+          "slackId": "U09MWK25WJ1",
+          "role": "MEMBER",
+          "rep": 0
+        },
+        {
+          "rep": 0,
+          "github": "",
+          "repos": [],
+          "slackId": "U07TQVBJEGG",
+          "role": "MEMBER",
+          "name": "Claire Phan",
+          "matchyEnabled": true
+        },
+        {
+          "matchyEnabled": true,
+          "github": "",
+          "slackId": "U09MTLTUU3V",
+          "name": "Jay Chan",
+          "role": "MEMBER",
+          "repos": [],
+          "rep": 0
+        },
+        {
+          "matchyEnabled": true,
+          "repos": [],
+          "slackId": "U09N31GNMNX",
+          "rep": 0,
+          "name": "Leo Siu",
+          "role": "MEMBER",
+          "github": ""
+        },
+        {
+          "name": "Jerry Duy Nguyen",
+          "role": "MEMBER",
+          "matchyEnabled": true,
+          "rep": 0,
+          "repos": [],
+          "slackId": "U07T2665RDG",
+          "github": ""
+        },
+        {
+          "repos": [],
+          "github": "",
+          "role": "MEMBER",
+          "name": "Derrick  Thrower",
+          "slackId": "U09MY1H7L5U",
+          "matchyEnabled": true,
+          "rep": 0
+        },
+        {
+          "matchyEnabled": true,
+          "rep": 0,
+          "repos": [],
+          "role": "MEMBER",
+          "slackId": "U07TQSU7RRN",
+          "name": "Alex Yin",
+          "github": ""
+        },
+        {
+          "name": "Angelina Wang",
+          "github": "",
+          "role": "MEMBER",
+          "slackId": "U07U38UUPAP",
+          "repos": [],
+          "rep": 0,
+          "matchyEnabled": true
+        },
+        {
+          "role": "MEMBER",
+          "slackId": "U07SZAAUR9T",
+          "repos": [],
+          "name": "Tiffany Jiang Yan",
+          "github": "",
+          "rep": 0,
+          "matchyEnabled": true
+        },
+        {
+          "matchyEnabled": true,
+          "rep": 0,
+          "name": "Jolene Chou",
+          "github": "",
+          "repos": [],
+          "role": "MEMBER",
+          "slackId": "U07TES7NT17"
+        },
+        {
+          "matchyEnabled": true,
+          "slackId": "U062JQHTE5V",
+          "role": "MEMBER",
+          "rep": 0,
+          "github": "",
+          "name": "V Vu",
+          "repos": []
+        },
+        {
+          "matchyEnabled": true,
+          "rep": 0,
+          "role": "MEMBER",
+          "name": "Gina Do",
+          "github": "",
+          "repos": [],
+          "slackId": "U09MY1JKAKG"
+        },
+        {
+          "role": "MEMBER",
+          "slackId": "U07SMH3R50X",
+          "matchyEnabled": true,
+          "github": "",
+          "name": "Arnav Kanekar",
+          "repos": [],
+          "rep": 0
+        },
+        {
+          "repos": [],
+          "slackId": "U09NUBZ9WNL",
+          "role": "MEMBER",
+          "matchyEnabled": true,
+          "name": "Evie Nhat Vy Ngo",
+          "github": "",
+          "rep": 0
+        },
+        {
+          "name": "Isaac Nguyen",
+          "github": "",
+          "matchyEnabled": true,
+          "rep": 0,
+          "slackId": "U07SVGK7AP8",
+          "repos": [],
+          "role": "MEMBER"
+        },
+        {
+          "rep": 0,
+          "slackId": "U07T1JB22PL",
+          "name": "Bowen Wang",
+          "role": "MEMBER",
+          "github": "",
+          "matchyEnabled": true,
+          "repos": []
+        },
+        {
+          "github": "",
+          "repos": [],
+          "slackId": "U09MY1GMZM4",
+          "name": "Dominic",
+          "rep": 0,
+          "matchyEnabled": true,
+          "role": "MEMBER"
+        },
+        {
+          "repos": [],
+          "slackId": "U09N03EE602",
+          "name": "Kailee Tea Kaocharoen",
+          "github": "",
+          "matchyEnabled": true,
+          "role": "MEMBER",
+          "rep": 0
+        },
+        {
+          "role": "MEMBER",
+          "name": "Nathan Ong",
+          "slackId": "U09MTLR9UUT",
+          "repos": [],
+          "github": "",
+          "matchyEnabled": true,
+          "rep": 0
+        },
+        {
+          "name": "Sahana Chockalingam",
+          "matchyEnabled": true,
+          "repos": [],
+          "role": "MEMBER",
+          "rep": 0,
+          "slackId": "U09ND0DFM4H",
+          "github": ""
+        },
+        {
+          "rep": 0,
+          "repos": [],
+          "name": "Ryan Su",
+          "role": "MEMBER",
+          "matchyEnabled": true,
+          "github": "",
+          "slackId": "U07T20PN1GB"
+        },
+        {
+          "slackId": "U09MWKA8X6Z",
+          "matchyEnabled": true,
+          "name": "Kylie Nguyen",
+          "rep": 0,
+          "role": "MEMBER",
+          "repos": [],
+          "github": ""
+        },
+        {
+          "repos": [],
+          "name": "Shayan Halder",
+          "slackId": "U09ND0CT43B",
+          "rep": 0,
+          "role": "MEMBER",
+          "github": "",
+          "matchyEnabled": true
+        },
+        {
+          "role": "MEMBER",
+          "slackId": "U09MWKB46G5",
+          "rep": 0,
+          "matchyEnabled": true,
+          "github": "",
+          "name": "Nandita Paranjape",
+          "repos": []
+        },
+        {
+          "repos": [],
+          "name": "Allison Huang",
+          "rep": 0,
+          "github": "",
+          "role": "MEMBER",
+          "matchyEnabled": true,
+          "slackId": "U09N03NH62E"
+        },
+        {
+          "role": "MEMBER",
+          "slackId": "U09MTLWF0GK",
+          "rep": 0,
+          "repos": [],
+          "github": "",
+          "name": "Jennifer Yan",
+          "matchyEnabled": true
+        },
+        {
+          "slackId": "U09MY1GQELW",
+          "repos": [],
+          "role": "MEMBER",
+          "matchyEnabled": true,
+          "rep": 0,
+          "github": "",
+          "name": "Ali Zaidi"
+        },
+        {
+          "rep": 0,
+          "role": "MEMBER",
+          "matchyEnabled": true,
+          "repos": [],
+          "github": "",
+          "slackId": "U07SVEE9QGN",
+          "name": "Margaret Galvez"
+        },
+        {
+          "slackId": "U09N3KJ5KTN",
+          "name": "Grace Yan",
+          "repos": [],
+          "role": "MEMBER",
+          "matchyEnabled": true,
+          "rep": 0,
+          "github": ""
+        },
+        {
+          "name": "Midori Dragics",
+          "rep": 0,
+          "role": "MEMBER",
+          "github": "",
+          "matchyEnabled": true,
+          "slackId": "U09MTLWBYAF",
+          "repos": []
+        },
+        {
+          "matchyEnabled": true,
+          "role": "MEMBER",
+          "repos": [],
+          "name": "Angela Wang",
+          "rep": 0,
+          "slackId": "U09MTLTE9R9",
+          "github": ""
+        },
+        {
+          "github": "",
+          "matchyEnabled": true,
+          "rep": 0,
+          "repos": [],
+          "role": "MEMBER",
+          "slackId": "U07T4LAS0N8",
+          "name": "Nathan Nguyen"
+        },
+        {
+          "slackId": "U07SZ9R4QFP",
+          "matchyEnabled": true,
+          "name": "Adarsh Venkateswaran",
+          "repos": [],
+          "role": "MEMBER",
+          "rep": 0,
+          "github": ""
+        },
+        {
+          "role": "MEMBER",
+          "slackId": "U07T4JKAAAY",
+          "matchyEnabled": true,
+          "name": "Mehek Bhatnagar",
+          "github": "",
+          "rep": 0,
+          "repos": []
+        },
+        {
+          "repos": [],
+          "role": "MEMBER",
+          "github": "",
+          "matchyEnabled": true,
+          "slackId": "U09MWK9MT0D",
+          "name": "Lawrence Zhou",
+          "rep": 0
+        },
+        {
+          "role": "MEMBER",
+          "github": "",
+          "slackId": "U09MY1EQCEA",
+          "name": "Justin Thomas Tran",
+          "rep": 0,
+          "matchyEnabled": true,
+          "repos": []
+        },
+        {
+          "slackId": "U063K9AG40Y",
+          "rep": 0,
+          "matchyEnabled": true,
+          "github": "",
+          "repos": [],
+          "name": "Brendan Lieu",
+          "role": "MEMBER"
+        }
+      ],
+      "previousMatches": {
+        "U07TQSU7RRN": [
+          "U09NUBZ9WNL",
+          "U07SZAAUR9T"
+        ],
+        "U09N03NH62E": [
+          "U09MWKA8X6Z",
+          "U09N03EE602"
+        ],
+        "U09ND0CT43B": [
+          "U09MTLWF0GK"
+        ],
+        "U07TQVBJEGG": [
+          "U062JQHTE5V",
+          "U07TES7NT17",
+          "U063K9AG40Y"
+        ],
+        "U063K9AG40Y": [
+          "U062JQHTE5V",
+          "U07TQVBJEGG",
+          "U07T2665RDG",
+          "U07SVEE9QGN"
+        ],
+        "U062JQHTE5V": [
+          "U07TQVBJEGG",
+          "U09ND0DFM4H",
+          "U063K9AG40Y"
+        ],
+        "U09MTLWF0GK": [
+          "U09ND0CT43B"
+        ],
+        "U09MY1H7L5U": [
+          "U09N03MF96W"
+        ],
+        "U07T2665RDG": [
+          "U07SVEE9QGN",
+          "U063K9AG40Y"
+        ],
+        "U09N03MF96W": [
+          "U09MY1H7L5U"
+        ],
+        "U07SZAAUR9T": [
+          "U07TQSU7RRN",
+          "U07U38UUPAP",
+          "U07SVGK7AP8",
+          "U09NUBZ9WNL"
+        ],
+        "U09MWKA8X6Z": [
+          "U09N03NH62E",
+          "U09N03EE602"
+        ],
+        "U0631Q51G04": [
+          "U09MJK632TZ",
+          "U09MTLTUU3V"
+        ],
+        "U09MWKB46G5": [
+          "U07SVGK7AP8",
+          "U07T4JEEUSG"
+        ],
+        "U09MTLR9UUT": [
+          "U07U38UUPAP"
+        ],
+        "U07T4JEEUSG": [
+          "U09MWKB46G5",
+          "U07SVGK7AP8"
+        ],
+        "U07U38UUPAP": [
+          "U07SVGK7AP8",
+          "U07SZAAUR9T",
+          "U09MTLR9UUT"
+        ],
+        "U09NUBZ9WNL": [
+          "U07SZAAUR9T",
+          "U07TQSU7RRN"
+        ],
+        "U09N03EE602": [
+          "U09MWKA8X6Z",
+          "U09N03NH62E"
+        ],
+        "U09MJK632TZ": [
+          "U0631Q51G04",
+          "U09MTLTUU3V"
+        ],
+        "U07SVEE9QGN": [
+          "U07T2665RDG",
+          "U063K9AG40Y"
+        ],
+        "U09ND0DFM4H": [
+          "U062JQHTE5V"
+        ],
+        "U07TES7NT17": [
+          "U07TQVBJEGG"
+        ],
+        "U07SVGK7AP8": [
+          "U07U38UUPAP",
+          "U07SZAAUR9T",
+          "U09MWKB46G5",
+          "U07T4JEEUSG"
+        ],
+        "U09MTLTUU3V": [
+          "U09MJK632TZ",
+          "U0631Q51G04"
+        ]
+      },
+      "nextMatchOverrides": [
+        {
+          "members": [
+            "U063K9AG40Y",
+            "U07T4JEEUSG"
+          ]
+        }
+      ],
+      "skipNextMatchy": true,
+      "lastUpdated": "2025-11-22T03:25:30.670Z"
+    }
+  }
+}

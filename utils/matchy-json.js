@@ -1,6 +1,7 @@
 const Bot = require("./bot");
 const fs = require("fs");
 const path = require("path");
+const { loadMembersData, saveMembersData } = require("./firebase");
 
 // Create welcome message for matchy groups - Easy to edit!
 const createWelcomeMessage = () => {
@@ -24,51 +25,25 @@ ${activities.map(activity => `• ${activity}`).join('\n')}
 *Remember:* The goal is to connect and build relationships. Keep it casual and fun! 🤓👍`;
 };
 
-// Load members data from JSON file
-const loadMembersData = () => {
-  try {
-    const dataPath = path.join(__dirname, "../data/members.json");
-    const data = fs.readFileSync(dataPath, "utf8");
-    const parsed = JSON.parse(data);
-    
-    // Ensure the structure is correct
-    return {
-      members: parsed.members || [],
-      previousMatches: parsed.previousMatches || {}
-    };
-  } catch (error) {
-    console.error("Error loading members data:", error);
-    return { members: [], previousMatches: {} };
-  }
-};
-
-// Save members data to JSON file
-const saveMembersData = (data) => {
-  try {
-    const dataPath = path.join(__dirname, "../data/members.json");
-    fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
-  } catch (error) {
-    console.error("Error saving members data:", error);
-  }
-};
+// loadMembersData and saveMembersData are now imported from firebase.js
 
 // Get all members who have matchyEnabled: true
-const getMembersFromJSON = () => {
-  const data = loadMembersData();
-  return data.members
+const getMembersFromJSON = async () => {
+  const data = await loadMembersData();
+  return (data.members || [])
     .filter((member) => member.matchyEnabled)
     .map((member) => member.slackId);
 };
 
-// Get previous matches from JSON
-const getPreviousMatches = () => {
-  const data = loadMembersData();
+// Get previous matches from Firestore
+const getPreviousMatches = async () => {
+  const data = await loadMembersData();
   return data.previousMatches || {};
 };
 
-// Update previous matches in JSON
-const updatePreviousMatches = (currentMatches, previousMatches) => {
-  const data = loadMembersData();
+// Update previous matches in Firestore
+const updatePreviousMatches = async (currentMatches, previousMatches) => {
+  const data = await loadMembersData();
   
   // Update previous matches with current matches
   for (const match of currentMatches) {
@@ -92,7 +67,7 @@ const updatePreviousMatches = (currentMatches, previousMatches) => {
   
   // Save updated data
   data.previousMatches = previousMatches;
-  saveMembersData(data);
+  await saveMembersData(data);
 };
 
 // Check if two members can be paired (haven't met before)
@@ -412,17 +387,23 @@ const addUserToMatchy = async ({ ack, respond, command }) => {
     }
     
     // Load members data
-    const membersData = loadMembersData();
+    const membersData = await loadMembersData();
     
     // Check if user already exists
     const existingMember = membersData.members.find(member => member.slackId === userId);
     
     if (existingMember) {
-        removeUserFromMatchy({ ack: async () => {}, respond: async (message) => {
-          console.log("Removing user from matchy:", message);
-          await respond(`✅ You've been removed from the Matchy system!`);
-        }, command: { user_id: userId } });
-      return;
+      if (existingMember.matchyEnabled) {
+        existingMember.matchyEnabled = false;
+        await saveMembersData(membersData);
+        await respond(`✅ You've been removed from the Matchy system!`);
+        return;
+      } else {
+        existingMember.matchyEnabled = true;
+        await saveMembersData(membersData);
+        await respond(`✅ You've been added to the Matchy system!`);
+        return;
+      }
     }
     
     // Get user info from Slack
@@ -456,8 +437,8 @@ const addUserToMatchy = async ({ ack, respond, command }) => {
       // Add to members array
       membersData.members.push(newMember);
       
-      // Save to JSON file
-      saveMembersData(membersData);
+      // Save to Firestore
+      await saveMembersData(membersData);
       
       console.log(`✅ Added new member to JSON: ${newMember.name} (@${userId})`);
       await respond(`✅ You've been added to the Matchy system!\n\nYour profile:\n• Name: ${newMember.name}\n• Matchy Enabled: Yes\n\nYou'll now be included in weekly matchy meetups! 🎉`);
@@ -488,41 +469,23 @@ const removeUserFromMatchy = async ({ ack, respond, command }) => {
     }
     
     // Load members data
-    const membersData = loadMembersData();
+    const membersData = await loadMembersData();
     
     // Find the user in the members array
-    const memberIndex = membersData.members.findIndex(member => member.slackId === userId);
+    const member = membersData.members.find(member => member.slackId === userId);
     
-    if (memberIndex === -1) {
+    if (!member) {
       await respond("❌ You're not in the Matchy system!");
       return;
     }
     
-    // Get member info before removing
-    const memberToRemove = membersData.members[memberIndex];
+    // Disable match participation but keep their history
+    member.matchyEnabled = false;
     
-    // Remove the user from the members array
-    membersData.members.splice(memberIndex, 1);
+    await saveMembersData(membersData);
     
-    // Also remove them from previous matches if they exist
-    if (membersData.previousMatches) {
-      // Remove them as a key
-      delete membersData.previousMatches[userId];
-      
-      // Remove them from other members' previous matches
-      Object.keys(membersData.previousMatches).forEach(memberId => {
-        if (Array.isArray(membersData.previousMatches[memberId])) {
-          membersData.previousMatches[memberId] = 
-            membersData.previousMatches[memberId].filter(id => id !== userId);
-        }
-      });
-    }
-    
-    // Save updated data to JSON file
-    saveMembersData(membersData);
-    
-    console.log(`✅ Removed member from JSON: ${memberToRemove.name} (@${userId})`);
-    await respond(`✅ You've been removed from the Matchy system!\n\nWe're sorry to see you go, ${memberToRemove.name}! 😢\n\nYou can always rejoin by running \`/matchy\` again.`);
+    console.log(`✅ Disabled member participation: ${member.name} (@${userId})`);
+    await respond(`✅ You've been removed from the Matchy rotation, ${member.name}. Your previous matches are still saved if you decide to return!`);
     
   } catch (error) {
     console.error("Error in removeUserFromMatchy:", error);
@@ -535,9 +498,36 @@ const generateMatches = async ({ respond }) => {
   try {
     console.log("Generating Matchy meetups...");
     
-    const membersData = loadMembersData();
-    const members = getMembersFromJSON();
-    const previousMatches = getPreviousMatches();
+    const membersData = await loadMembersData();
+    
+    if (membersData.skipNextMatchy) {
+      membersData.skipNextMatchy = false;
+      await saveMembersData(membersData);
+      const message = "⏸️ Matchy generation skipped this week.";
+      if (respond) {
+        await respond(message);
+      } else {
+        console.log(message);
+      }
+      return;
+    }
+    
+    const members = await getMembersFromJSON();
+    const previousMatches = await getPreviousMatches();
+    const overrides = Array.isArray(membersData.nextMatchOverrides) ? membersData.nextMatchOverrides : [];
+    const forcedMatches = [];
+    const availableSet = new Set(members);
+    
+    overrides.forEach(group => {
+      if (!Array.isArray(group)) return;
+      const uniqueGroup = [...new Set(group)].filter(memberId => availableSet.has(memberId));
+      if (uniqueGroup.length >= 2) {
+        forcedMatches.push(uniqueGroup);
+        uniqueGroup.forEach(memberId => availableSet.delete(memberId));
+      }
+    });
+    
+    const availableMembers = members.filter(memberId => availableSet.has(memberId));
     
     console.log("Available members:", members);
     console.log("Previous matches:", previousMatches);
@@ -552,16 +542,22 @@ const generateMatches = async ({ respond }) => {
       return;
     }
     
-    // Generate matches
-    const currentMatches = getMatches(members, previousMatches);
+    // Generate matches for remaining members
+    const currentMatches = getMatches(availableMembers, previousMatches);
+    const allMatches = [...forcedMatches, ...currentMatches];
     
     // Check if repeats were allowed for this round
     const allowRepeats = allCombinationsExhausted(members, previousMatches);
     
     // Automatically create group chats
-    await createGroupChats(currentMatches, membersData, respond, allowRepeats);
+    await createGroupChats(allMatches, membersData, respond, allowRepeats);
     
-    console.log("Generated and created matches:", currentMatches);
+    // Clear overrides after successful generation
+    const latestData = await loadMembersData();
+    latestData.nextMatchOverrides = [];
+    await saveMembersData(latestData);
+    
+    console.log("Generated and created matches:", allMatches);
     
   } catch (error) {
     console.error("Error in generateMatches:", error);
@@ -574,10 +570,10 @@ const generateMatches = async ({ respond }) => {
 // Automatically create group chats for matches
 const createGroupChats = async (matches, membersData, respond, allowRepeats) => {
   try {
-    const previousMatches = getPreviousMatches();
+    const previousMatches = await getPreviousMatches();
     
     // Update previous matches
-    updatePreviousMatches(matches, previousMatches);
+    await updatePreviousMatches(matches, previousMatches);
     
     // Create group chats for each match
     const createdGroups = [];
@@ -648,9 +644,9 @@ const clearMatchy = async ({ ack, respond }) => {
   try {
     await ack();
     
-    const data = loadMembersData();
+    const data = await loadMembersData();
     data.previousMatches = {};
-    saveMembersData(data);
+    await saveMembersData(data);
     
     await respond("🧹 Cleared all previous Matchy matches!");
     
@@ -665,7 +661,7 @@ const loadMembersDataCommand = async ({ ack, respond }) => {
   try {
     await ack();
     
-    const data = loadMembersData();
+    const data = await loadMembersData();
     const members = data.members || [];
     const previousMatches = data.previousMatches || {};
     
@@ -712,73 +708,39 @@ const loadMembersDataCommand = async ({ ack, respond }) => {
   }
 };
 
-// Export members JSON file through Slack
-const exportMembersJSON = async ({ ack, respond, command }) => {
+// Export members JSON inline in the Slack message (no file upload)
+const exportMembersJSON = async ({ ack, respond }) => {
   try {
     await ack();
-    console.log("Exporting members JSON via command...");
+    console.log("Exporting members JSON (inline)...");
     
     // Load members data
-    const data = loadMembersData();
+    const data = await loadMembersData();
     const jsonString = JSON.stringify(data, null, 2);
     
-    // Get the file path
-    const dataPath = path.join(__dirname, "../data/members.json");
+    // Slack message size is limited; truncate if too long
+    const max = 2900; // leave room for fencing and extras
+    const preview = jsonString.length > max ? `${jsonString.substring(0, max)}\n... (truncated)` : jsonString;
     
-    // Create a buffer from the JSON string
-    const buffer = Buffer.from(jsonString, 'utf8');
-    
-    // Upload file to Slack
-    try {
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const filename = `members-export-${timestamp}.json`;
-      
-      // Use channel_id if available, otherwise use user_id for DMs
-      const targetChannel = command.channel_id || command.user_id;
-      
-      const uploadResult = await Bot.client.files.upload({
-        channels: targetChannel,
-        file: buffer,
-        filename: filename,
-        title: "Matchy Members Export",
-        initial_comment: `📦 *Members JSON Export*\n\nExported at: ${new Date().toLocaleString()}\nTotal members: ${data.members?.length || 0}\n\nThis file contains the complete members data and match history.`
-      });
-      
-      if (uploadResult.ok) {
-        console.log(`✅ Successfully exported members JSON`);
-        await respond("✅ Members JSON file exported successfully! Check the file above. 📎");
-      } else {
-        throw new Error(uploadResult.error || "Unknown error uploading file");
-      }
-      
-    } catch (uploadError) {
-      console.error("Error uploading file to Slack:", uploadError);
-      // Fallback: send JSON as a code block if file upload fails
-      const jsonPreview = jsonString.length > 3000 
-        ? jsonString.substring(0, 3000) + "\n... (truncated)"
-        : jsonString;
-      
-      await respond({
-        text: "📦 *Members JSON Export*\n\n*Note: File upload failed, showing preview instead:*",
-        blocks: [
-          {
-            type: "section",
-            text: {
-              type: "mrkdwn",
-              text: "📦 *Members JSON Export*\n\n*Note: File upload failed, showing preview instead:*"
-            }
-          },
-          {
-            type: "section",
-            text: {
-              type: "mrkdwn",
-              text: `\`\`\`json\n${jsonPreview}\n\`\`\``
-            }
+    await respond({
+      text: "📦 Members JSON Export",
+      blocks: [
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: "📦 *Members JSON Export*\n\nHere is the current contents of `members.json`:"
           }
-        ]
-      });
-    }
-    
+        },
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: `\`\`\`json\n${preview}\n\`\`\``
+          }
+        }
+      ]
+    });
   } catch (error) {
     console.error("Error in exportMembersJSON:", error);
     await respond("❌ Error exporting members JSON. Check the logs for details.");
@@ -820,7 +782,7 @@ const addNewMemberToJSON = async (userId) => {
     };
     
     // Load existing data
-    const data = loadMembersData();
+    const data = await loadMembersData();
     
     // Check if user already exists
     const existingMember = data.members.find(member => member.slackId === userId);
@@ -833,7 +795,7 @@ const addNewMemberToJSON = async (userId) => {
     data.members.push(newMember);
     
     // Save updated data
-    saveMembersData(data);
+    await saveMembersData(data);
     
     console.log(`✅ Added new member to JSON: ${newMember.name} (@${userId})`);
     
@@ -852,49 +814,1008 @@ const addNewMemberToJSON = async (userId) => {
   }
 };
 
-// Handle button actions for user approval
-const handleUserApproval = async ({ ack, respond, action }) => {
+
+// Open modal to manage members (view channel users and add to Firestore)
+const openManageMembersModal = async ({ ack, body, client }) => {
   try {
     await ack();
     
-    if (currentUserIndex >= pendingUsers.length) {
-      await respond("❌ No more users to process.");
-      return;
+    const channelId = "C01FL4VCE1Z"; // The matchy channel ID
+    
+    // Get channel members
+    const membersResult = await client.conversations.members({
+      channel: channelId
+    });
+    
+    if (!membersResult.ok) {
+      throw new Error(`Error fetching channel members: ${membersResult.error}`);
     }
     
-    const user = pendingUsers[currentUserIndex];
+    const memberIds = membersResult.members;
+    console.log(`Found ${memberIds.length} members in channel`);
     
-    switch (action.action_id) {
-      case "approve_user":
-        user.approved = true;
-        await respond(`✅ **Approved:** ${user.name} (@${user.slackId})`);
-        break;
-      case "decline_user":
-        user.approved = false;
-        await respond(`❌ **Declined:** ${user.name} (@${user.slackId})`);
-        break;
-      case "skip_user":
-        // Leave approved as undefined (skipped)
-        await respond(`⏭️ **Skipped:** ${user.name} (@${user.slackId})`);
-        break;
+    // Get user info for each member in parallel (much faster!)
+    const userPromises = memberIds.map(async (userId) => {
+      try {
+        const userResult = await client.users.info({ user: userId });
+        
+        if (userResult.ok && userResult.user) {
+          const user = userResult.user;
+          
+          // Skip bots and deleted users
+          if (!user.is_bot && !user.deleted) {
+            return {
+              id: user.id,
+              name: user.real_name || user.display_name || user.name || "Unknown",
+              email: user.profile?.email || "",
+              image: user.profile?.image_72 || ""
+            };
+          }
+        }
+      } catch (error) {
+        console.error(`Error fetching user ${userId}:`, error);
+      }
+      return null;
+    });
+    
+    // Wait for all user fetches to complete
+    const userResults = await Promise.all(userPromises);
+    const users = userResults.filter(user => user !== null);
+    
+    // Get existing members from Firestore
+    const existingData = await loadMembersData();
+    const existingMemberIds = new Set(existingData.members.map(m => m.slackId));
+    
+    // Sort users: not in system first, then alphabetically
+    users.sort((a, b) => {
+      const aExists = existingMemberIds.has(a.id);
+      const bExists = existingMemberIds.has(b.id);
+      if (aExists !== bExists) return aExists ? 1 : -1;
+      return a.name.localeCompare(b.name);
+    });
+    
+    // Create modal blocks
+    const blocks = [
+      {
+        type: "header",
+        text: {
+          type: "plain_text",
+          text: "👥 Manage Matchy Members"
+        }
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `Found *${users.length}* users in the matchy channel. Select users to add to the Matchy system.\n\nUsers already in the system are marked with ✅`
+        }
+      },
+      {
+        type: "divider"
+      }
+    ];
+    
+    // Add user multi-select (limit to 50 for modal size)
+    const usersToShow = users
+    const userOptions = usersToShow.map(user => {
+      const isInSystem = existingMemberIds.has(user.id);
+      return {
+        text: {
+          type: "plain_text",
+          text: `${user.name}${isInSystem ? " ✅" : ""}`
+        },
+        value: user.id,
+        description: {
+          type: "plain_text",
+          text: isInSystem ? "Already in system" : "Click to add"
+        }
+      };
+    });
+    
+    blocks.push({
+      type: "section",
+      block_id: "users_selection",
+      text: {
+        type: "mrkdwn",
+        text: "*Select users to add to Matchy:*"
+      },
+      accessory: {
+        type: "multi_static_select",
+        placeholder: {
+          type: "plain_text",
+          text: "Select users..."
+        },
+        action_id: "selected_users",
+        options: userOptions,
+        max_selected_items: 50
+      }
+    });
+    
+    if (users.length > 50) {
+      blocks.push({
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text: `Showing first 50 of ${users.length} users. Use search to find specific users.`
+          }
+        ]
+      });
     }
     
-    // Move to next user
-    currentUserIndex++;
-    
-    // Show next user or summary
-    if (currentUserIndex < pendingUsers.length) {
-      await showUserForApproval(respond);
-    } else {
-      await showApprovalSummary(respond);
+    // Open the modal
+    try {
+      await client.views.open({
+        trigger_id: body.trigger_id,
+        view: {
+          type: "modal",
+          callback_id: "manage_members_modal",
+          title: {
+            type: "plain_text",
+            text: "Manage Members"
+          },
+          submit: {
+            type: "plain_text",
+            text: "Add Selected Users"
+          },
+          close: {
+            type: "plain_text",
+            text: "Cancel"
+          },
+          blocks: blocks
+        }
+      });
+    } catch (modalError) {
+      // If trigger_id expired, send a message instead
+      if (modalError.data?.error === 'expired_trigger_id') {
+        console.log("Trigger ID expired, sending message response instead");
+        await client.chat.postEphemeral({
+          channel: body.channel_id,
+          user: body.user_id,
+          text: `⏱️ Loading users took too long. Found *${users.length}* users in the channel.\n\nPlease try the command again - it should be faster on the second attempt as we cache the results.`
+        });
+      } else {
+        throw modalError;
+      }
     }
     
   } catch (error) {
-    console.error("Error handling user approval:", error);
-    await respond("❌ Error processing approval. Check the logs for details.");
+    console.error("Error opening manage members modal:", error);
+    // Try to send an error message if possible
+    try {
+      await client.chat.postEphemeral({
+        channel: body.channel_id,
+        user: body.user_id,
+        text: `❌ Error loading members: ${error.message}`
+      });
+    } catch (err) {
+      // If we can't send a message, just log it
+      console.error("Could not send error message:", err);
+    }
   }
 };
 
+// Handle modal submission - add selected users to Firestore
+const handleManageMembersSubmitted = async ({ ack, body, view, client }) => {
+  try {
+    await ack();
+    
+    const selectedUsers = [];
+    const stateValues = view.state.values;
+
+    console.log("stateValues", stateValues);
+    console.log("selectedUsers", selectedUsers);
+    
+    // Extract selected users from multi-select
+    if (stateValues.users_selection && stateValues.users_selection.selected_users) {
+      const selectedOptions = stateValues.users_selection.selected_users.selected_options || [];
+      selectedUsers.push(...selectedOptions.map(opt => opt.value));
+    }
+    
+    if (selectedUsers.length === 0) {
+      await client.views.update({
+        view_id: body.view.id,
+        view: {
+          type: "modal",
+          title: {
+            type: "plain_text",
+            text: "Manage Members"
+          },
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: "❌ No users selected. Please select at least one user to add."
+              }
+            }
+          ]
+        }
+      });
+      return;
+    }
+    
+    // Load existing data
+    const existingData = await loadMembersData();
+    const existingMemberIds = new Set(existingData.members.map(m => m.slackId));
+    
+    // Get user info and add to Firestore
+    let addedCount = 0;
+    let skippedCount = 0;
+    const addedUsers = [];
+    
+    for (const userId of selectedUsers) {
+      // Skip if already in system
+      if (existingMemberIds.has(userId)) {
+        skippedCount++;
+        continue;
+      }
+      
+      try {
+        const userResult = await client.users.info({ user: userId });
+        
+        if (userResult.ok && userResult.user) {
+          const user = userResult.user;
+          
+          if (!user.is_bot && !user.deleted) {
+            const newMember = {
+              slackId: user.id,
+              name: user.real_name || user.display_name || user.name || "Unknown",
+              role: "MEMBER",
+              repos: [],
+              github: "",
+              rep: 0,
+              matchyEnabled: true
+            };
+            
+            existingData.members.push(newMember);
+            addedUsers.push(newMember.name);
+            addedCount++;
+          }
+        }
+      } catch (error) {
+        console.error(`Error adding user ${userId}:`, error);
+      }
+    }
+    
+    // Save updated data to Firestore
+    if (addedCount > 0) {
+      await saveMembersData(existingData);
+    }
+    
+    // Show success message
+    let message = `✅ Successfully added *${addedCount}* user(s) to Matchy!\n\n`;
+    
+    if (addedUsers.length > 0) {
+      message += `*Added users:*\n${addedUsers.map((name, i) => `${i + 1}. ${name}`).join("\n")}\n\n`;
+    }
+    
+    if (skippedCount > 0) {
+      message += `*Skipped:* ${skippedCount} user(s) (already in system)`;
+    }
+    
+    await client.views.update({
+      view_id: body.view.id,
+      view: {
+        type: "modal",
+        title: {
+          type: "plain_text",
+          text: "Manage Members"
+        },
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: message
+            }
+          }
+        ]
+      }
+    });
+    
+  } catch (error) {
+    console.error("Error handling manage members submission:", error);
+    await client.views.update({
+      view_id: body.view.id,
+      view: {
+        type: "modal",
+        title: {
+          type: "plain_text",
+          text: "Manage Members"
+        },
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `❌ Error adding users: ${error.message}`
+            }
+          }
+        ]
+      }
+    });
+  }
+};
+
+// Open modal to manage previous matches (add/remove match history)
+const openManageMatchesModal = async ({ ack, body, client }) => {
+  try {
+    // Acknowledge immediately to prevent timeout
+    await ack();
+    
+    // Load existing data
+    const existingData = await loadMembersData();
+    const members = existingData.members || [];
+    const previousMatches = existingData.previousMatches || {};
+    
+    // Create member options for dropdowns
+    const memberOptions = members.map(member => ({
+      text: {
+        type: "plain_text",
+        text: member.name || member.slackId
+      },
+      value: member.slackId
+    }));
+    
+    // Create blocks for the modal
+    const blocks = [
+      {
+        type: "header",
+        text: {
+          type: "plain_text",
+          text: "🤝 Manage Previous Matches"
+        }
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `Manage match history between members. This helps the system avoid pairing people who have already met.`
+        }
+      },
+      {
+        type: "divider"
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: "*Add New Match Groups:*\nSelect 2-3 members per group who have already met. You can add up to 3 groups at once."
+        }
+      },
+      {
+        type: "section",
+        block_id: "group1_selection",
+        text: {
+          type: "mrkdwn",
+          text: "*Group 1:* (Select 2-3 members)"
+        },
+        accessory: {
+          type: "multi_static_select",
+          placeholder: {
+            type: "plain_text",
+            text: "Select members for group 1..."
+          },
+          action_id: "group1",
+          options: memberOptions,
+          max_selected_items: 3
+        }
+      },
+      {
+        type: "section",
+        block_id: "group2_selection",
+        text: {
+          type: "mrkdwn",
+          text: "*Group 2:* (Optional - Select 2-3 members)"
+        },
+        accessory: {
+          type: "multi_static_select",
+          placeholder: {
+            type: "plain_text",
+            text: "Select members for group 2..."
+          },
+          action_id: "group2",
+          options: memberOptions,
+          max_selected_items: 3
+        }
+      },
+      {
+        type: "section",
+        block_id: "group3_selection",
+        text: {
+          type: "mrkdwn",
+          text: "*Group 3:* (Optional - Select 2-3 members)"
+        },
+        accessory: {
+          type: "multi_static_select",
+          placeholder: {
+            type: "plain_text",
+            text: "Select members for group 3..."
+          },
+          action_id: "group3",
+          options: memberOptions,
+          max_selected_items: 3
+        }
+      },
+      {
+        type: "divider"
+      }
+    ];
+    
+    // Calculate match statistics
+    const matchCount = Object.keys(previousMatches).reduce((sum, key) => {
+      return sum + (previousMatches[key]?.length || 0);
+    }, 0) / 2; // Divide by 2 since each match is stored twice
+    
+    const membersWithMatches = Object.keys(previousMatches).filter(
+      memberId => previousMatches[memberId] && previousMatches[memberId].length > 0
+    );
+    
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Match History Summary:*\n• ${Math.floor(matchCount)} unique pairs\n• ${membersWithMatches.length} members with match history`
+      }
+    });
+    
+    blocks.push({
+      type: "divider"
+    });
+    
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: "*Previous Matches by Member:*"
+      }
+    });
+    
+    // Display matches organized by member (limit to first 15 members for modal size)
+    const displayedMembers = [];
+    const membersToShow = membersWithMatches;
+    
+    membersToShow.forEach(memberId => {
+      const member = members.find(m => m.slackId === memberId);
+      const memberName = member?.name || memberId;
+      const matchedIds = previousMatches[memberId] || [];
+      
+      if (matchedIds.length > 0) {
+        // Get names of matched members
+        const matchedNames = matchedIds.map(matchedId => {
+          const matchedMember = members.find(m => m.slackId === matchedId);
+          return matchedMember?.name || matchedId;
+        });
+        
+        // Create a display string
+        const matchesText = matchedNames.join(", ");
+        
+        // Create a key for removing all matches for this member
+        const sortedIds = [memberId, ...matchedIds].sort();
+        const groupKey = sortedIds.join('-');
+        
+        displayedMembers.push({
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: `*${memberName}*\nMatched with: ${matchesText}`
+          },
+          accessory: {
+            type: "button",
+            text: {
+              type: "plain_text",
+              text: "Remove All"
+            },
+            style: "danger",
+            action_id: `remove_match_${groupKey}`,
+            value: groupKey
+          }
+        });
+      }
+    });
+    
+    blocks.push(...displayedMembers);
+    
+    if (displayedMembers.length === 0) {
+      blocks.push({
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: "_No previous matches recorded yet._"
+        }
+      });
+    }
+    
+    if (membersWithMatches.length > 15) {
+      blocks.push({
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text: `Showing ${membersWithMatches.length} members with matches. Use the export command to see all matches.`
+          }
+        ]
+      });
+    }
+    
+    // Open the modal
+    try {
+      await client.views.open({
+        trigger_id: body.trigger_id,
+        view: {
+          type: "modal",
+          callback_id: "manage_matches_modal",
+          title: {
+            type: "plain_text",
+            text: "Manage Matches"
+          },
+          submit: {
+            type: "plain_text",
+            text: "Add Groups"
+          },
+          close: {
+            type: "plain_text",
+            text: "Cancel"
+          },
+          blocks: blocks
+        }
+      });
+    } catch (modalError) {
+      if (modalError.data?.error === 'expired_trigger_id') {
+        console.log("Trigger ID expired, sending message response instead");
+        await client.chat.postEphemeral({
+          channel: body.channel_id,
+          user: body.user_id,
+          text: `⏱️ Loading matches took too long. Please try the command again.`
+        });
+      } else {
+        throw modalError;
+      }
+    }
+    
+  } catch (error) {
+    console.error("Error opening manage matches modal:", error);
+    try {
+      await client.chat.postEphemeral({
+        channel: body.channel_id,
+        user: body.user_id,
+        text: `❌ Error loading matches: ${error.message}`
+      });
+    } catch (err) {
+      console.error("Could not send error message:", err);
+    }
+  }
+};
+
+// Handle modal submission - add match groups to Firestore
+const handleManageMatchesSubmitted = async ({ ack, body, view, client }) => {
+  try {
+    await ack();
+    
+    const stateValues = view.state.values;
+    
+    // Extract groups from multi-select fields
+    const groups = [];
+    for (let i = 1; i <= 3; i++) {
+      const groupSelection = stateValues[`group${i}_selection`]?.[`group${i}`];
+      if (groupSelection && groupSelection.selected_options && groupSelection.selected_options.length >= 2) {
+        const memberIds = groupSelection.selected_options.map(opt => opt.value);
+        // Validate group size (2-3 members)
+        if (memberIds.length >= 2 && memberIds.length <= 3) {
+          // Check for duplicates within group
+          const uniqueIds = [...new Set(memberIds)];
+          if (uniqueIds.length === memberIds.length) {
+            groups.push(memberIds);
+          }
+        }
+      }
+    }
+    
+    if (groups.length === 0) {
+      await client.views.update({
+        view_id: body.view.id,
+        view: {
+          type: "modal",
+          title: {
+            type: "plain_text",
+            text: "Manage Matches"
+          },
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: "❌ Please select at least one group with 2-3 members. Each group must have unique members."
+              }
+            }
+          ]
+        }
+      });
+      return;
+    }
+    
+    // Load existing data
+    const existingData = await loadMembersData();
+    const previousMatches = existingData.previousMatches || {};
+    const members = existingData.members || [];
+    
+    // Process each group
+    const addedGroups = [];
+    const skippedGroups = [];
+    let totalPairsAdded = 0;
+    
+    for (const group of groups) {
+      // Check if all pairs in this group already exist
+      let groupAlreadyExists = true;
+      for (let i = 0; i < group.length; i++) {
+        for (let j = i + 1; j < group.length; j++) {
+          const member1Id = group[i];
+          const member2Id = group[j];
+          
+          if (!previousMatches[member1Id] || !previousMatches[member1Id].includes(member2Id)) {
+            groupAlreadyExists = false;
+            break;
+          }
+        }
+        if (!groupAlreadyExists) break;
+      }
+      
+      if (groupAlreadyExists) {
+        const groupNames = group.map(id => {
+          const member = members.find(m => m.slackId === id);
+          return member?.name || id;
+        });
+        skippedGroups.push(groupNames.join(", "));
+        continue;
+      }
+      
+      // Add all pairs in the group (bidirectional)
+      for (let i = 0; i < group.length; i++) {
+        for (let j = i + 1; j < group.length; j++) {
+          const member1Id = group[i];
+          const member2Id = group[j];
+          
+          // Initialize arrays if they don't exist
+          if (!previousMatches[member1Id]) {
+            previousMatches[member1Id] = [];
+          }
+          if (!previousMatches[member2Id]) {
+            previousMatches[member2Id] = [];
+          }
+          
+          // Add if not already present
+          if (!previousMatches[member1Id].includes(member2Id)) {
+            previousMatches[member1Id].push(member2Id);
+            totalPairsAdded++;
+          }
+          if (!previousMatches[member2Id].includes(member1Id)) {
+            previousMatches[member2Id].push(member1Id);
+          }
+        }
+      }
+      
+      // Store group info for confirmation
+      const groupNames = group.map(id => {
+        const member = members.find(m => m.slackId === id);
+        return member?.name || id;
+      });
+      addedGroups.push(groupNames.join(", "));
+    }
+    
+    // Save to Firestore if any changes
+    if (totalPairsAdded > 0) {
+      existingData.previousMatches = previousMatches;
+      await saveMembersData(existingData);
+    }
+    
+    // Build success message
+    let message = `✅ Successfully added ${addedGroups.length} group(s)!\n\n`;
+    
+    if (addedGroups.length > 0) {
+      message += `*Added groups:*\n`;
+      addedGroups.forEach((groupNames, index) => {
+        message += `${index + 1}. ${groupNames}\n`;
+      });
+      message += `\n*Total pairs added:* ${totalPairsAdded}\n\n`;
+    }
+    
+    if (skippedGroups.length > 0) {
+      message += `*Skipped groups (already exist):*\n`;
+      skippedGroups.forEach((groupNames, index) => {
+        message += `${index + 1}. ${groupNames}\n`;
+      });
+    }
+    
+    message += `\nThese groups will now be avoided in future matchy generations.`;
+    
+    // Show success message
+    await client.views.update({
+      view_id: body.view.id,
+      view: {
+        type: "modal",
+        title: {
+          type: "plain_text",
+          text: "Manage Matches"
+        },
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: message
+            }
+          }
+        ]
+      }
+    });
+    
+  } catch (error) {
+    console.error("Error handling manage matches submission:", error);
+    await client.views.update({
+      view_id: body.view.id,
+      view: {
+        type: "modal",
+        title: {
+          type: "plain_text",
+          text: "Manage Matches"
+        },
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `❌ Error adding match: ${error.message}`
+            }
+          }
+        ]
+      }
+    });
+  }
+};
+
+// Handle button action to remove a match (can be a pair or group)
+const handleRemoveMatch = async ({ ack, body, client, action }) => {
+  try {
+    await ack();
+    
+    if (!action || !action.value) {
+      throw new Error("No match information provided.");
+    }
+    
+    const groupKey = action.value; // Format: "memberId1-memberId2" or "memberId1-memberId2-memberId3"
+    const memberIds = groupKey.split('-');
+    
+    // Load existing data
+    const existingData = await loadMembersData();
+    const previousMatches = existingData.previousMatches || {};
+    const members = existingData.members || [];
+    
+    // Remove all pairs within the group (bidirectional)
+    for (let i = 0; i < memberIds.length; i++) {
+      for (let j = i + 1; j < memberIds.length; j++) {
+        const member1Id = memberIds[i];
+        const member2Id = memberIds[j];
+        
+        // Remove bidirectional
+        if (previousMatches[member1Id]) {
+          previousMatches[member1Id] = previousMatches[member1Id].filter(id => id !== member2Id);
+        }
+        if (previousMatches[member2Id]) {
+          previousMatches[member2Id] = previousMatches[member2Id].filter(id => id !== member1Id);
+        }
+      }
+    }
+    
+    // Save to Firestore
+    existingData.previousMatches = previousMatches;
+    await saveMembersData(existingData);
+    
+    // Get member names for confirmation
+    const memberNames = memberIds.map(id => {
+      const member = members.find(m => m.slackId === id);
+      return member?.name || id;
+    });
+    
+    let groupText;
+    if (memberNames.length === 2) {
+      groupText = `*${memberNames[0]}* ↔ *${memberNames[1]}*`;
+    } else {
+      groupText = `*${memberNames.join('*, *')}*`;
+    }
+    
+    const channelId = body.channel?.id || body.user?.id;
+    if (channelId) {
+      await client.chat.postMessage({
+        channel: channelId,
+        text: `✅ Removed match group: ${groupText}\n\nAll pairs in this group have been removed. These members can now be matched again in future generations.`
+      });
+    }
+    
+  } catch (error) {
+    console.error("Error removing match:", error);
+    const errorChannelId = body.channel?.id || body.user?.id;
+    if (errorChannelId) {
+      await client.chat.postMessage({
+        channel: errorChannelId,
+        text: `❌ Error removing match: ${error.message}`
+      });
+    }
+  }
+};
+
+// Import previous matches into Firestore
+const importPreviousMatches = async ({ ack, respond }) => {
+  try {
+    await ack();
+    
+    const previousMatchesToImport = {
+      'U07TQSU7RRN': [ 'U09NUBZ9WNL', 'U07SZAAUR9T' ],
+      'U062JQHTE5V': [ 'U07TQVBJEGG', 'U09ND0DFM4H' ],
+      'U07TQVBJEGG': [ 'U062JQHTE5V', 'U07TES7NT17' ],
+      'U07U38UUPAP': [ 'U07SVGK7AP8', 'U07SZAAUR9T', 'U09MTLR9UUT' ],
+      'U07SVGK7AP8': [ 'U07U38UUPAP', 'U07SZAAUR9T', 'U09MWKB46G5', 'U07T4JEEUSG' ],
+      'U07T4JEEUSG': [ 'U09MWKB46G5', 'U07SVGK7AP8' ],
+      'U0631Q51G04': [ 'U09MJK632TZ', 'U09MTLTUU3V' ],
+      'U09MTLTUU3V': [ 'U09MJK632TZ', 'U0631Q51G04' ],
+      'U09MTLR9UUT': [ 'U07U38UUPAP' ],
+      'U09MTLWF0GK': [ 'U09ND0CT43B' ],
+      'U09MJK632TZ': [ 'U0631Q51G04', 'U09MTLTUU3V' ],
+      'U09ND0CT43B': [ 'U09MTLWF0GK' ],
+      'U09N03MF96W': [ 'U09MY1H7L5U' ],
+      'U09MY1H7L5U': [ 'U09N03MF96W' ],
+      'U07T2665RDG': [ 'U07SVEE9QGN' ],
+      'U07TES7NT17': [ 'U07TQVBJEGG' ],
+      'U09MWKA8X6Z': [ 'U09N03NH62E', 'U09N03EE602' ],
+      'U09N03NH62E': [ 'U09MWKA8X6Z', 'U09N03EE602' ],
+      'U09N03EE602': [ 'U09MWKA8X6Z', 'U09N03NH62E' ],
+      'U09ND0DFM4H': [ 'U062JQHTE5V' ],
+      'U09NUBZ9WNL': [ 'U07SZAAUR9T', 'U07TQSU7RRN' ]
+    };
+    
+    // Load existing data
+    const existingData = await loadMembersData();
+    
+    // Start with a fresh object (overwrite, don't merge)
+    const currentMatches = {};
+    
+    // Copy the imported matches
+    Object.keys(previousMatchesToImport).forEach(memberId => {
+      currentMatches[memberId] = [...previousMatchesToImport[memberId]];
+    });
+    
+    // Ensure bidirectional relationships
+    Object.keys(currentMatches).forEach(memberId => {
+      currentMatches[memberId].forEach(matchedId => {
+        if (!currentMatches[matchedId]) {
+          currentMatches[matchedId] = [];
+        }
+        if (!currentMatches[matchedId].includes(memberId)) {
+          currentMatches[matchedId].push(memberId);
+        }
+      });
+    });
+    
+    // Save to Firestore (overwrite existing matches)
+    existingData.previousMatches = currentMatches;
+    await saveMembersData(existingData);
+    
+    // Count total pairs
+    const totalPairs = Object.keys(currentMatches).reduce((sum, key) => {
+      return sum + (currentMatches[key]?.length || 0);
+    }, 0) / 2;
+    
+    const membersWithMatches = Object.keys(currentMatches).filter(
+      memberId => currentMatches[memberId] && currentMatches[memberId].length > 0
+    );
+    
+    await respond(`✅ Successfully imported previous matches!\n\n*Summary:*\n• ${Math.floor(totalPairs)} unique pairs\n• ${membersWithMatches.length} members with match history\n\nAll matches have been saved to Firestore.`);
+    
+    console.log("Successfully imported previous matches to Firestore");
+    
+  } catch (error) {
+    console.error("Error importing previous matches:", error);
+    await respond(`❌ Error importing previous matches: ${error.message}`);
+  }
+};
+
+// Ensure a temporary match for the next run
+const ensureNextMatch = async ({ ack, respond, command, client }) => {
+  try {
+    await ack();
+    
+    const text = (command?.text || "").trim();
+    const userIds = new Set();
+    const pendingHandles = [];
+    
+    if (text.length > 0) {
+      const tokens = text.split(/[\s,]+/).filter(Boolean);
+      tokens.forEach(token => {
+        const mentionMatch = token.match(/^<@([A-Z0-9]+)(?:\|[^>]+)?>$/i);
+        if (mentionMatch) {
+          userIds.add(mentionMatch[1]);
+          return;
+        }
+        const handleMatch = token.match(/^@?([A-Za-z0-9._-]+)$/i);
+        if (handleMatch) {
+          pendingHandles.push(handleMatch[1].toLowerCase());
+        }
+      });
+    }
+    
+    if (pendingHandles.length > 0) {
+      try {
+        const usersResponse = await client.users.list();
+        if (usersResponse.ok && Array.isArray(usersResponse.members)) {
+          pendingHandles.forEach(handle => {
+            const matchedUser = usersResponse.members.find(user => {
+              if (!user || user.deleted || user.is_bot) return false;
+              const candidateNames = [
+                user.name,
+                user.profile?.display_name,
+                user.profile?.display_name_normalized,
+                user.profile?.real_name,
+                user.profile?.real_name_normalized
+              ]
+                .filter(Boolean)
+                .map(name => name.toLowerCase());
+              return candidateNames.includes(handle);
+            });
+            if (matchedUser) {
+              userIds.add(matchedUser.id);
+            }
+          });
+        }
+      } catch (lookupError) {
+        console.error("Error looking up Slack users:", lookupError);
+      }
+    }
+    
+    const selectedIds = [...userIds];
+    
+    if (selectedIds.length < 2 || selectedIds.length > 3) {
+      await respond("❌ Don't use this command for now. This is for debugging purposes.");
+      return;
+    }
+    
+    const data = await loadMembersData();
+    const enabledMembers = new Set((data.members || []).filter(member => member.matchyEnabled).map(member => member.slackId));
+    
+    const unavailable = selectedIds.filter(id => !enabledMembers.has(id));
+    if (unavailable.length > 0) {
+      const names = unavailable.map(id => `<@${id}>`).join(", ");
+      await respond(`❌ These users are not currently enabled for Matchy: ${names}`);
+      return;
+    }
+    
+    data.nextMatchOverrides = Array.isArray(data.nextMatchOverrides) ? data.nextMatchOverrides : [];
+    data.nextMatchOverrides.push(selectedIds);
+    
+    await saveMembersData(data);
+    
+    await respond(`✅ Scheduled match override for next round: ${selectedIds.map(id => `<@${id}>`).join(", ")}`);
+    
+  } catch (error) {
+    console.error("Error ensuring next match:", error);
+    await respond("❌ Error scheduling match override. Check the logs for details.");
+  }
+};
+
+const skipNextMatchyWeek = async ({ ack, respond }) => {
+  try {
+    await ack();
+    
+    const data = await loadMembersData();
+    data.skipNextMatchy = true;
+    await saveMembersData(data);
+    
+    await respond("⏸️ Matchy generation will be skipped for the next scheduled run.");
+    console.log("Next Matchy generation has been marked to skip.");
+  } catch (error) {
+    console.error("Error skipping next matchy week:", error);
+    await respond("❌ Error scheduling skip. Check the logs for details.");
+  }
+};
 
 module.exports = {
   addUserToMatchy,
@@ -903,6 +1824,13 @@ module.exports = {
   clearMatchy,
   loadMembersDataCommand,
   exportMembersJSON,
-  handleUserApproval,
   addNewMemberToJSON,
+  openManageMembersModal,
+  handleManageMembersSubmitted,
+  openManageMatchesModal,
+  handleManageMatchesSubmitted,
+  handleRemoveMatch,
+  importPreviousMatches,
+  ensureNextMatch,
+  skipNextMatchyWeek,
 };

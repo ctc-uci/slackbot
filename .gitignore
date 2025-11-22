@@ -2,3 +2,5 @@
 /node_modules
 log*
 /data/members.json
+matchy-bot-firebase-adminsdk-fbsvc-67a83a05dc.json
+package-lock.json

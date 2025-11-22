@@ -4,23 +4,7 @@ const express = require("express");
 
 const Bot = require("./utils/bot");
 
-const {
-  openCreatePRModal,
-  handleCreatePRSubmitted,
-  updateIssueOptions,
-} = require("./utils/pr");
-
-const {
-  openUpdateProfileModal,
-  handleUpdateProfileSubmitted,
-} = require("./utils/profile");
-
-const { addUserToMatchy, removeUserFromMatchy, generateMatches, clearMatchy, loadMembersDataCommand, exportMembersJSON } = require("./utils/matchy-json");
-
-const {
-  openCreateIssueModal,
-  handleCreateIssueSubmitted,
-} = require("./utils/issue");
+const { addUserToMatchy, generateMatches, loadMembersDataCommand, exportMembersJSON, openManageMembersModal, handleManageMembersSubmitted, openManageMatchesModal, handleManageMatchesSubmitted, handleRemoveMatch, importPreviousMatches, ensureNextMatch, skipNextMatchyWeek } = require("./utils/matchy-json");
 
 // Mongoose for connecting to MongoDB
 // Temporarily disabled for testing
@@ -34,12 +18,19 @@ mongoConnection.once("open", () => {
   console.log("MongoDB database connection established successfully");
 });
 */
-
 // Bot.command("/pr", openCreatePRModal);
+
+
 Bot.command("/profile", loadMembersDataCommand);
 Bot.command("/matchy", addUserToMatchy);
-// Bot.command("/leavematchy", removeUserFromMatchy);
-Bot.command("/issue", exportMembersJSON);
+Bot.command("/pr", skipNextMatchyWeek);
+Bot.command("/issue", ensureNextMatch);
+
+// Bot.command("/pr", openManageMembersModal);
+// Bot.view("manage_members_modal", handleManageMembersSubmitted);
+
+// Bot.view("manage_matches_modal", handleManageMatchesSubmitted);
+// Bot.action(({ action }) => action?.action_id?.startsWith('remove_match_') ?? false, handleRemoveMatch);
 // Bot.command("/clear", clearMatchy);
 
 
@@ -55,12 +46,12 @@ Bot.command("/issue", exportMembersJSON);
   await Bot.start();
   console.log(`⚡️ Slack Bolt app is running on port ${port}!`);
 
-  // Schedule weekly matchy generation (Wednesdays at 5 PM PST)
+  // // Schedule weekly matchy generation (Wednesdays at 5 PM PST)
   const rule = new schedule.RecurrenceRule();
   rule.tz = 'America/Los_Angeles';
-  rule.dayOfWeek = 3; // Wednesday
-  rule.hour = 17; // 5 PM
-  rule.minute = 0;
+  rule.dayOfWeek = 5; // Wednesday
+  rule.hour = 19; // 5 PM
+  rule.minute = 39;
   
   schedule.scheduleJob(rule, async () => {
     console.log('🕐 Running scheduled matchy generation...');
@@ -84,7 +75,7 @@ Bot.command("/issue", exportMembersJSON);
     }
   });
   
-  console.log('📅 Matchy scheduled for Wednesdays at 5:00 PM PST');
+  // console.log('📅 Matchy scheduled for Wednesdays at 5:00 PM PST');
   
   // Create Express app for webhook endpoint
   const app = express();
