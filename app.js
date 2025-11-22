@@ -4,7 +4,7 @@ const express = require("express");
 
 const Bot = require("./utils/bot");
 
-const { addUserToMatchy, generateMatches, loadMembersDataCommand, exportMembersJSON, openManageMembersModal, handleManageMembersSubmitted, openManageMatchesModal, handleManageMatchesSubmitted, handleRemoveMatch, importPreviousMatches, ensureNextMatch, skipNextMatchyWeek } = require("./utils/matchy-json");
+const { addUserToMatchy, generateMatches, loadMembersDataCommand, exportMembersJSON, openManageMembersModal, handleManageMembersSubmitted, openManageMatchesModal, handleManageMatchesSubmitted, handleRemoveMatch, importPreviousMatches, ensure, skipNextMatchyWeek, toggleMatchyPause } = require("./utils/matchy-json");
 
 // Mongoose for connecting to MongoDB
 // Temporarily disabled for testing
@@ -23,11 +23,12 @@ mongoConnection.once("open", () => {
 
 Bot.command("/profile", loadMembersDataCommand);
 Bot.command("/matchy", addUserToMatchy);
-Bot.command("/pr", skipNextMatchyWeek);
-Bot.command("/issue", ensureNextMatch);
+Bot.command("/issue", ensure);
+Bot.command("/pr", toggleMatchyPause);
+Bot.command("/clear", skipNextMatchyWeek);
+// Bot.view("manage_members_modal", handleManageMembersSubmitted);
 
 // Bot.command("/pr", openManageMembersModal);
-// Bot.view("manage_members_modal", handleManageMembersSubmitted);
 
 // Bot.view("manage_matches_modal", handleManageMatchesSubmitted);
 // Bot.action(({ action }) => action?.action_id?.startsWith('remove_match_') ?? false, handleRemoveMatch);

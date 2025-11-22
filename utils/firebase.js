@@ -35,11 +35,12 @@ const loadMembersData = async () => {
         previousMatches: data.previousMatches || {},
         nextMatchOverrides: parsedOverrides,
         skipNextMatchy: Boolean(data.skipNextMatchy),
+        matchyPaused: Boolean(data.matchyPaused),
       };
     } else {
       // Document doesn't exist, initialize it with empty structure
       console.log("Members document doesn't exist, initializing with empty structure");
-      const emptyData = { members: [], previousMatches: {}, nextMatchOverrides: [], skipNextMatchy: false };
+      const emptyData = { members: [], previousMatches: {}, nextMatchOverrides: [], skipNextMatchy: false, matchyPaused: false };
       
       // Create the document in Firestore
       try {
@@ -57,7 +58,7 @@ const loadMembersData = async () => {
     }
   } catch (error) {
     console.error("Error loading members data from Firestore:", error);
-    return { members: [], previousMatches: {}, nextMatchOverrides: [], skipNextMatchy: false };
+    return { members: [], previousMatches: {}, nextMatchOverrides: [], skipNextMatchy: false, matchyPaused: false };
   }
 };
 
@@ -84,6 +85,7 @@ const saveMembersData = async (data) => {
       previousMatches: data.previousMatches || {},
       nextMatchOverrides: sanitizedOverrides,
       skipNextMatchy: Boolean(data.skipNextMatchy),
+      matchyPaused: Boolean(data.matchyPaused),
       lastUpdated: new Date().toISOString()
     }, { merge: false }); // Overwrite entire document
     

@@ -376,10 +376,11 @@ const formatMatches = (matches, membersData, allowRepeats = false) => {
 const addUserToMatchy = async ({ ack, respond, command }) => {
   try {
     await ack();
-    console.log("Adding user to matchy via /matchy command...");
+    const userId = command?.user_id;
+    const userName = command?.user_name;
+    console.log(`[COMMAND] /matchy executed by user: ${userName || 'unknown'} (${userId || 'unknown'})`);
     
     // Get the user who ran the command
-    const userId = command?.user_id;
     
     if (!userId) {
       await respond("❌ Could not identify user. Please try again.");
@@ -458,10 +459,11 @@ const addUserToMatchy = async ({ ack, respond, command }) => {
 const removeUserFromMatchy = async ({ ack, respond, command }) => {
   try {
     await ack();
-    console.log("Removing user from matchy via command...");
+    const userId = command?.user_id;
+    const userName = command?.user_name;
+    console.log(`[COMMAND] removeUserFromMatchy executed by user: ${userName || 'unknown'} (${userId || 'unknown'})`);
     
     // Get the user who ran the command
-    const userId = command?.user_id;
     
     if (!userId) {
       await respond("❌ Could not identify user. Please try again.");
@@ -500,6 +502,18 @@ const generateMatches = async ({ respond }) => {
     
     const membersData = await loadMembersData();
     
+    // Check if matchy is paused (persistent toggle)
+    if (membersData.matchyPaused) {
+      const message = "⏸️ Matchy generation is currently paused.";
+      if (respond) {
+        await respond(message);
+      } else {
+        console.log(message);
+      }
+      return;
+    }
+    
+    // Check for one-time skip
     if (membersData.skipNextMatchy) {
       membersData.skipNextMatchy = false;
       await saveMembersData(membersData);
@@ -657,9 +671,12 @@ const clearMatchy = async ({ ack, respond }) => {
 };
 
 // Load and display member data
-const loadMembersDataCommand = async ({ ack, respond }) => {
+const loadMembersDataCommand = async ({ ack, respond, command }) => {
   try {
     await ack();
+    const userId = command?.user_id;
+    const userName = command?.user_name;
+    console.log(`[COMMAND] /profile executed by user: ${userName || 'unknown'} (${userId || 'unknown'})`);
     
     const data = await loadMembersData();
     const members = data.members || [];
@@ -1003,8 +1020,6 @@ const handleManageMembersSubmitted = async ({ ack, body, view, client }) => {
     const selectedUsers = [];
     const stateValues = view.state.values;
 
-    console.log("stateValues", stateValues);
-    console.log("selectedUsers", selectedUsers);
     
     // Extract selected users from multi-select
     if (stateValues.users_selection && stateValues.users_selection.selected_users) {
@@ -1720,9 +1735,12 @@ const importPreviousMatches = async ({ ack, respond }) => {
 };
 
 // Ensure a temporary match for the next run
-const ensureNextMatch = async ({ ack, respond, command, client }) => {
+const ensure = async ({ ack, respond, command, client }) => {
   try {
     await ack();
+    const userId = command?.user_id;
+    const userName = command?.user_name;
+    console.log(`[COMMAND] /issue executed by user: ${userName || 'unknown'} (${userId || 'unknown'})`);
     
     const text = (command?.text || "").trim();
     const userIds = new Set();
@@ -1793,19 +1811,34 @@ const ensureNextMatch = async ({ ack, respond, command, client }) => {
     
     await saveMembersData(data);
     
-    await respond(`✅ Scheduled match override for next round: ${selectedIds.map(id => `<@${id}>`).join(", ")}`);
+    const memberNames = selectedIds.map(id => {
+      const member = data.members.find(m => m.slackId === id);
+      return member ? member.name : id;
+    });
+    
+    await respond(`✅ Ensured for next round (${memberNames.length} users)`);
     
   } catch (error) {
-    console.error("Error ensuring next match:", error);
-    await respond("❌ Error scheduling match override. Check the logs for details.");
+    console.error("Error with ensuring:", error);
+    await respond("❌ Error with ensuring. Check the logs for details.");
   }
 };
 
-const skipNextMatchyWeek = async ({ ack, respond }) => {
+const skipNextMatchyWeek = async ({ ack, respond, command }) => {
   try {
     await ack();
+    const userId = command?.user_id;
+    const userName = command?.user_name;
+    console.log(`[COMMAND] skipNextMatchyWeek executed by user: ${userName || 'unknown'} (${userId || 'unknown'})`);
     
     const data = await loadMembersData();
+    
+    // Check if matchy is already paused
+    if (data.matchyPaused) {
+      await respond("⏸️ Matchy generation is already paused. Use `/pr` to toggle it back on first.");
+      return;
+    }
+    
     data.skipNextMatchy = true;
     await saveMembersData(data);
     
@@ -1814,6 +1847,31 @@ const skipNextMatchyWeek = async ({ ack, respond }) => {
   } catch (error) {
     console.error("Error skipping next matchy week:", error);
     await respond("❌ Error scheduling skip. Check the logs for details.");
+  }
+};
+
+const toggleMatchyPause = async ({ ack, respond, command }) => {
+  try {
+    await ack();
+    const userId = command?.user_id;
+    const userName = command?.user_name;
+    console.log(`[COMMAND] /pr (toggleMatchyPause) executed by user: ${userName || 'unknown'} (${userId || 'unknown'})`);
+    
+    const data = await loadMembersData();
+    const wasPaused = data.matchyPaused || false;
+    data.matchyPaused = !wasPaused;
+    await saveMembersData(data);
+    
+    if (data.matchyPaused) {
+      await respond("⏸️ Matchy generation has been paused. It will remain paused until you toggle it back on with `/matchy-toggle`.");
+      console.log("Matchy generation has been paused.");
+    } else {
+      await respond("▶️ Matchy generation has been resumed. Scheduled runs will now proceed normally.");
+      console.log("Matchy generation has been resumed.");
+    }
+  } catch (error) {
+    console.error("Error toggling matchy pause:", error);
+    await respond("❌ Error toggling matchy pause. Check the logs for details.");
   }
 };
 
@@ -1831,6 +1889,7 @@ module.exports = {
   handleManageMatchesSubmitted,
   handleRemoveMatch,
   importPreviousMatches,
-  ensureNextMatch,
+  ensure,
   skipNextMatchyWeek,
+  toggleMatchyPause,
 };
