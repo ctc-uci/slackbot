@@ -49,9 +49,9 @@ Bot.command("/issue", ensureNextMatch);
   // // Schedule weekly matchy generation (Wednesdays at 5 PM PST)
   const rule = new schedule.RecurrenceRule();
   rule.tz = 'America/Los_Angeles';
-  rule.dayOfWeek = 5; // Wednesday
-  rule.hour = 19; // 5 PM
-  rule.minute = 39;
+  rule.dayOfWeek = 3; // Wednesday
+  rule.hour = 17; // 5 PM
+  rule.minute = 0;
   
   schedule.scheduleJob(rule, async () => {
     console.log('🕐 Running scheduled matchy generation...');
