@@ -1,6 +1,6 @@
 const { Octokit } = require("@octokit/core");
 
-require("dotenv").config("../");
+require("dotenv").config();
 
 // Octokit.js
 // https://github.com/octokit/core.js#readme

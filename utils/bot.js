@@ -2,8 +2,6 @@ const { App } = require("@slack/bolt");
 const path = require("path");
 
 require("dotenv").config({ path: path.join(__dirname, "../.env") });
-
-// Socket Mode - bot maintains WebSocket connection to Slack (no public URL needed)
 const Bot = new App({
   token: process.env.SLACK_TOKEN,
   signingSecret: process.env.SIGNING_SECRET,
