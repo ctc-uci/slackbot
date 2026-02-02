@@ -1,128 +1,124 @@
+/**
+ * Matchy Slack Bot - Socket Mode + Express
+ * Deploy to Koyeb. Use UptimeRobot to ping /health every 30 min to prevent scale-to-zero.
+ */
 const schedule = require("node-schedule");
-const mongoose = require("mongoose");
 const express = require("express");
+const path = require("path");
+
+require("dotenv").config({ path: path.join(__dirname, ".env") });
 
 const Bot = require("./utils/bot");
+const {
+  generateMatches,
+} = require("./utils/matchy-json");
 
-const { addUserToMatchy, generateMatches, loadMembersDataCommand, exportMembersJSON, openManageMembersModal, handleManageMembersSubmitted, openManageMatchesModal, handleManageMatchesSubmitted, handleRemoveMatch, importPreviousMatches, ensure, skipNextMatchyWeek, toggleMatchyPause } = require("./utils/matchy-json");
+// Register handlers before starting
+require("./handlers");
 
-// Mongoose for connecting to MongoDB
-// Temporarily disabled for testing
-/*
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
-const mongoConnection = mongoose.connection;
-mongoConnection.once("open", () => {
-  console.log("MongoDB database connection established successfully");
-});
-*/
-// Bot.command("/pr", openCreatePRModal);
-
-
-Bot.command("/profile", loadMembersDataCommand);
-Bot.command("/matchy", addUserToMatchy);
-Bot.command("/issue", ensure);
-Bot.command("/pr", toggleMatchyPause);
-Bot.command("/clear", skipNextMatchyWeek);
-// Bot.view("manage_members_modal", handleManageMembersSubmitted);
-
-// Bot.command("/pr", openManageMembersModal);
-
-// Bot.view("manage_matches_modal", handleManageMatchesSubmitted);
-// Bot.action(({ action }) => action?.action_id?.startsWith('remove_match_') ?? false, handleRemoveMatch);
-// Bot.command("/clear", clearMatchy);
-
-
-// Bot.action("repository", updateIssueOptions);
-
-// Bot.view("create-pr", handleCreatePRSubmitted);
-// Bot.view("create-issue", handleCreateIssueSubmitted);
-// Bot.view("update-profile", handleUpdateProfileSubmitted);
+const MATCHY_CHANNEL_ID = process.env.MATCHY_CHANNEL_ID || "C01FL4VCE1Z";
 
 (async () => {
-  const port = 5000;
-  // Start your app
   await Bot.start();
-  console.log(`⚡️ Slack Bolt app is running on port ${port}!`);
+  console.log("⚡️ Slack Bolt app (Socket Mode) is running!");
 
-  // // Schedule weekly matchy generation (Wednesdays at 5 PM PST)
+  // Schedule weekly matchy generation (Wednesdays at 5 PM PST)
   const rule = new schedule.RecurrenceRule();
-  rule.tz = 'America/Los_Angeles';
+  rule.tz = "America/Los_Angeles";
   rule.dayOfWeek = 3; // Wednesday
   rule.hour = 17; // 5 PM
   rule.minute = 0;
-  
+
   schedule.scheduleJob(rule, async () => {
-    console.log('🕐 Running scheduled matchy generation...');
+    console.log("🕐 Running scheduled matchy generation...");
     try {
-      // Create a mock context for the scheduled job
       const mockContext = {
         ack: async () => {},
         respond: async (message) => {
-          console.log('Scheduled matchy response:', message);
-          // You could also send this to a specific channel if needed
-          // await Bot.client.chat.postMessage({
-          //   channel: 'C01FL4VCE1Z',
-          //   text: message
-          // });
-        }
-      };
-      
-      await generateMatches(mockContext);
-    } catch (error) {
-      console.error('Error in scheduled matchy generation:', error);
-    }
-  });
-  
-  // console.log('📅 Matchy scheduled for Wednesdays at 5:00 PM PST');
-  
-  // Create Express app for webhook endpoint
-  const app = express();
-  app.use(express.json());
-  
-  // Add webhook endpoint for Railway/GitHub Actions cron
-  app.post('/matchy-scheduled', async (req, res) => {
-    try {
-      console.log('🕐 Webhook triggered: Running scheduled matchy generation...');
-      
-      const mockContext = {
-        ack: async () => {},
-        respond: async (message) => {
-          console.log('Scheduled matchy response:', message);
-          // Optionally send to a specific channel
           try {
             await Bot.client.chat.postMessage({
-              channel: 'C01FL4VCE1Z', // Your matchy channel
-              text: `🤖 *Automated Matchy Generation*\n\n${message}`
+              channel: MATCHY_CHANNEL_ID,
+              text: `🤖 *Automated Matchy Generation*\n\n${message}`,
             });
           } catch (error) {
-            console.error('Error sending to channel:', error);
+            console.error("Error sending to channel:", error);
           }
-        }
+        },
       };
-      
       await generateMatches(mockContext);
-      res.status(200).json({ 
-        success: true, 
-        message: 'Matchy generation completed',
-        timestamp: new Date().toISOString()
+    } catch (error) {
+      console.error("Error in scheduled matchy generation:", error);
+    }
+  });
+
+  // Express server: keep-alive endpoint + matchy webhook
+  const app = express();
+  app.use(express.json());
+
+  // Keep-alive endpoint - ping this every 30 min (UptimeRobot, Cron-job.org) to prevent Koyeb scale-to-zero
+  app.get("/", (req, res) => {
+    res.status(200).send("Bot is running");
+  });
+
+  app.get("/health", (req, res) => {
+    res.status(200).json({
+      status: "ok",
+      message: "Matchy Bot is running",
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // Webhook for GitHub Actions / external cron to trigger matchy
+  app.post("/matchy-scheduled", async (req, res) => {
+    const authHeader = req.headers.authorization;
+    const cronSecret = process.env.CRON_SECRET;
+    const isValidAuth =
+      cronSecret &&
+      (authHeader === `Bearer ${cronSecret}` ||
+        authHeader === `bearer ${cronSecret}`);
+
+    if (!isValidAuth) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    try {
+      console.log("🕐 Webhook triggered: Running scheduled matchy generation...");
+
+      const mockContext = {
+        ack: async () => {},
+        respond: async (message) => {
+          try {
+            await Bot.client.chat.postMessage({
+              channel: MATCHY_CHANNEL_ID,
+              text: `🤖 *Automated Matchy Generation*\n\n${message}`,
+            });
+          } catch (error) {
+            console.error("Error sending to channel:", error);
+          }
+        },
+      };
+
+      await generateMatches(mockContext);
+
+      res.status(200).json({
+        success: true,
+        message: "Matchy generation completed",
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error('Error in webhook matchy generation:', error);
-      res.status(500).json({ 
+      console.error("Error in webhook matchy generation:", error);
+      res.status(500).json({
         error: error.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   });
-  
-  // Start Express server on a different port
-  const webhookPort = process.env.PORT || 3000;
-  app.listen(webhookPort, () => {
-    console.log(`🔗 Webhook server running on port ${webhookPort}`);
+
+  const port = process.env.PORT || 8000;
+  app.listen(port, () => {
+    console.log(`🔗 HTTP server on port ${port}`);
+    console.log(`   Keep-alive:  GET / or GET /health (ping every 30 min)`);
+    console.log(`   Matchy cron: POST /matchy-scheduled`);
+    console.log("🚀 Matchy Bot ready for Koyeb deployment!");
   });
-  
-  console.log('🚀 Slackbot ready for Railway deployment!');
 })();
