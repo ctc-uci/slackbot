@@ -8,7 +8,8 @@
     "dev": "nodemon app.js",
     "format": "prettier --write \"**/*.js\"",
     "export:firestore": "node scripts/exportFirestore.js",
-    "import:firestore": "node scripts/importFirestore.js"
+    "import:firestore": "node scripts/importFirestore.js",
+    "start": "node app.js"
   },
   "keywords": [],
   "author": "",
