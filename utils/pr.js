@@ -6,7 +6,7 @@ const UserModel = require("../models/user.model");
 const messages = require("./msgs");
 const perms = require("./perms");
 
-require("dotenv").config("../");
+require("dotenv").config();
 
 const owner = "ctc-uci";
 
