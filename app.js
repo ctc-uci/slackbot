@@ -22,10 +22,10 @@ const MATCHY_CHANNEL_ID = process.env.MATCHY_CHANNEL_ID || "C01FL4VCE1Z";
   await Bot.start();
   console.log("⚡️ Slack Bolt app (Socket Mode) is running!");
 
-  // Schedule weekly matchy generation (Wednesdays at 5 PM PST)
+  // Schedule weekly matchy generation (Mondays at 5 PM PST)
   const rule = new schedule.RecurrenceRule();
-  rule.tz = "America/Los_Angeles";
-  rule.dayOfWeek = 3; // Wednesday
+  rule.tz = 'America/Los_Angeles';
+  rule.dayOfWeek = 1; // Monday
   rule.hour = 17; // 5 PM
   rule.minute = 0;
 
