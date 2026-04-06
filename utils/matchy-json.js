@@ -543,8 +543,8 @@ const generateMatches = async ({ respond }) => {
     
     const availableMembers = members.filter(memberId => availableSet.has(memberId));
     
-    console.log("Available members:", members);
-    console.log("Previous matches:", previousMatches);
+    // console.log("Available members:", members);
+    // console.log("Previous matches:", previousMatches);
     
     if (members.length < 2) {
       const message = "❌ Not enough members enabled for Matchy! Need at least 2 people.";
