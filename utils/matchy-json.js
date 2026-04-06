@@ -407,8 +407,8 @@ const generateMatchyMeetups = async ({ ack, respond }) => {
     const members = getMembersFromJSON();
     const previousMatches = getPreviousMatches();
     
-    console.log("Available members:", members);
-    console.log("Previous matches:", previousMatches);
+    // console.log("Available members:", members);
+    // console.log("Previous matches:", previousMatches);
     
     if (members.length < 2) {
       await respond("❌ Not enough members enabled for Matchy! Need at least 2 people.");
