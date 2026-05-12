@@ -227,7 +227,6 @@ const ensureNoSingleGroups = (matches, previousMatches, allowRepeats = false) =>
               if (canJoin1 && canJoin2) {
                 result[i] = [member1, single];
                 result.push([member2, anotherSingle]);
-                result.push([member3]);
                 singles.unshift(member3);
                 merged = true;
                 break;
@@ -336,6 +335,63 @@ const ensureNoSingleGroups = (matches, previousMatches, allowRepeats = false) =>
   }
   
   return finalResult;
+};
+
+// Each Slack user must appear in at most one group, and at most once per group.
+const validateMatchAssignments = (matches, membersData) => {
+  const roster = membersData?.members || [];
+  const nameFor = (slackId) =>
+    roster.find((m) => m.slackId === slackId)?.name || slackId;
+
+  const slackIdToGroupIndexes = new Map();
+  const withinGroup = [];
+
+  for (let g = 0; g < matches.length; g++) {
+    const group = matches[g];
+    if (!Array.isArray(group)) continue;
+    const seenInGroup = new Set();
+    for (const slackId of group) {
+      if (!slackId) continue;
+      if (seenInGroup.has(slackId)) {
+        withinGroup.push({ slackId, groupIndex: g });
+        continue;
+      }
+      seenInGroup.add(slackId);
+      if (!slackIdToGroupIndexes.has(slackId)) slackIdToGroupIndexes.set(slackId, []);
+      slackIdToGroupIndexes.get(slackId).push(g);
+    }
+  }
+
+  if (withinGroup.length) {
+    const lines = withinGroup.map(
+      (w) =>
+        `• *${nameFor(w.slackId)}* (\`${w.slackId}\`) appears twice in group ${w.groupIndex + 1}`
+    );
+    return {
+      ok: false,
+      message: `❌ *Matchy generation aborted:* duplicate user in a single group.\n\n${lines.join(
+        "\n"
+      )}\n\n_No group chats were created. Previous matches were not updated._`,
+    };
+  }
+
+  const crossGroup = [...slackIdToGroupIndexes.entries()].filter(
+    ([, idxs]) => idxs.length > 1
+  );
+  if (crossGroup.length) {
+    const lines = crossGroup.map(([slackId, idxs]) => {
+      const nums = idxs.map((i) => i + 1).join(", ");
+      return `• *${nameFor(slackId)}* (\`${slackId}\`): groups ${nums}`;
+    });
+    return {
+      ok: false,
+      message: `❌ *Matchy generation aborted:* ${crossGroup.length} user(s) would be in more than one group:\n\n${lines.join(
+        "\n"
+      )}\n\n_No group chats were created. Previous matches were not updated._`,
+    };
+  }
+
+  return { ok: true };
 };
 
 // Format matches for display
@@ -563,9 +619,17 @@ const generateMatches = async ({ respond }) => {
     // Check if repeats were allowed for this round
     const allowRepeats = allCombinationsExhausted(members, previousMatches);
     
-    // Automatically create group chats
-    await createGroupChats(allMatches, membersData, respond, allowRepeats);
-    
+    // Automatically create group chats (validates assignments before Firestore / Slack)
+    const createdOk = await createGroupChats(
+      allMatches,
+      membersData,
+      respond,
+      allowRepeats
+    );
+    if (!createdOk) {
+      return;
+    }
+
     // Clear overrides after successful generation
     const latestData = await loadMembersData();
     latestData.nextMatchOverrides = [];
@@ -584,6 +648,21 @@ const generateMatches = async ({ respond }) => {
 // Automatically create group chats for matches
 const createGroupChats = async (matches, membersData, respond, allowRepeats) => {
   try {
+    const validation = validateMatchAssignments(matches, membersData);
+    if (!validation.ok) {
+      console.error(
+        "[Matchy] validateMatchAssignments failed:",
+        validation.message,
+        JSON.stringify(matches)
+      );
+      if (respond) {
+        await respond(validation.message);
+      } else {
+        console.error(validation.message);
+      }
+      return false;
+    }
+
     const previousMatches = await getPreviousMatches();
     
     // Update previous matches
@@ -645,10 +724,13 @@ const createGroupChats = async (matches, membersData, respond, allowRepeats) => 
     await respond(output);
     
     console.log(`Successfully created ${createdGroups.length} group chats`);
-    
+    return true;
   } catch (error) {
     console.error("Error creating group chats:", error);
-    await respond("❌ Error creating group chats. Check the logs for details.");
+    if (respond) {
+      await respond("❌ Error creating group chats. Check the logs for details.");
+    }
+    return false;
   }
 };
 
@@ -1699,7 +1781,6 @@ const importPreviousMatches = async ({ ack, respond }) => {
       currentMatches[memberId] = [...previousMatchesToImport[memberId]];
     });
     
-    // Ensure bidirectional relationships
     Object.keys(currentMatches).forEach(memberId => {
       currentMatches[memberId].forEach(matchedId => {
         if (!currentMatches[matchedId]) {
@@ -1734,7 +1815,6 @@ const importPreviousMatches = async ({ ack, respond }) => {
   }
 };
 
-// Ensure a temporary match for the next run
 const ensure = async ({ ack, respond, command, client }) => {
   try {
     await ack();
