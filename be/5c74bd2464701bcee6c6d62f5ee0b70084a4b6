@@ -1,0 +1,24 @@
+utils/matchy-json.js
+  s_0bc8f2deb63ef5::t_ef2567eb9bd0bd 663
+  s_0bc8f2deb63ef5::t_06522ad9d35036 340-396
+  s_0bc8f2deb63ef5::t_0fe550369b489d 727,730-733
+  s_0bc8f2deb63ef5::t_b2fefcb24c16d3 623-632
+  s_0bc8f2deb63ef5::t_b4311c7ee0ba23 622
+  s_0bc8f2deb63ef5::t_2e6a90c5384a0f 651-662,664-665
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "be5c74bd2464701bcee6c6d62f5ee0b70084a4b6",
+  "prompts": {},
+  "sessions": {
+    "s_0bc8f2deb63ef5": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "b2fd90ab-eeb1-45a6-8681-11bdfda8cd37",
+        "model": "default"
+      },
+      "human_author": "Brendan Lieu <brendanlieu05@gmail.com>"
+    }
+  }
+}
