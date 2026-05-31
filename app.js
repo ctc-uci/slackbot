@@ -1,6 +1,6 @@
 /**
  * Matchy Slack Bot - Socket Mode + Express
- * Deploy to Koyeb. Use UptimeRobot to ping /health every 30 min to prevent scale-to-zero.
+ * Deploy to Railway. See RAILWAY_DEPLOYMENT.md.
  */
 const schedule = require("node-schedule");
 const express = require("express");
@@ -51,11 +51,9 @@ const MATCHY_CHANNEL_ID = process.env.MATCHY_CHANNEL_ID || "C01FL4VCE1Z";
     }
   });
 
-  // Express server: keep-alive endpoint + matchy webhook
   const app = express();
   app.use(express.json());
 
-  // Keep-alive endpoint - ping this every 30 min (UptimeRobot, Cron-job.org) to prevent Koyeb scale-to-zero
   app.get("/", (req, res) => {
     res.status(200).send("Bot is running");
   });
@@ -68,7 +66,6 @@ const MATCHY_CHANNEL_ID = process.env.MATCHY_CHANNEL_ID || "C01FL4VCE1Z";
     });
   });
 
-  // Webhook for GitHub Actions / external cron to trigger matchy
   app.post("/matchy-scheduled", async (req, res) => {
     const authHeader = req.headers.authorization;
     const cronSecret = process.env.CRON_SECRET;
@@ -117,8 +114,8 @@ const MATCHY_CHANNEL_ID = process.env.MATCHY_CHANNEL_ID || "C01FL4VCE1Z";
   const port = process.env.PORT || 8000;
   app.listen(port, () => {
     console.log(`🔗 HTTP server on port ${port}`);
-    console.log(`   Keep-alive:  GET / or GET /health (ping every 30 min)`);
-    console.log(`   Matchy cron: POST /matchy-scheduled`);
-    console.log("🚀 Matchy Bot ready for Koyeb deployment!");
+    console.log("   GET /health");
+    console.log("   POST /matchy-scheduled");
+    console.log("🚀 Matchy Bot ready for Railway deployment!");
   });
 })();
