@@ -1,0 +1,21 @@
+package.json
+  s_bbeeedaba4cb6c::t_61006e6f2c24ca 5,12,22,25
+.gitignore
+  s_bbeeedaba4cb6c::t_8bea03222711d1 2,5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "85ded1f3c74c8951897aaa3f4b7c34fa000c4583",
+  "prompts": {},
+  "sessions": {
+    "s_bbeeedaba4cb6c": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "5ff9d39f-ce59-4c76-bd78-9ad94ab011d5",
+        "model": "composer-2.5"
+      },
+      "human_author": "Brendan Lieu <brendanlieu05@gmail.com>"
+    }
+  }
+}
